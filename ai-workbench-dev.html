@@ -249,7 +249,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .prompt-save-btn:hover { background: var(--brand-soft); color: var(--brand); }
 .prompt-module textarea {
-  min-height: 100px; font-size: 13px; line-height: 1.6; border-radius: var(--radius-sm);
+  min-height: 120px; font-size: 13px; line-height: 1.6; border-radius: var(--radius-sm);
 }
 .prompt-tools {
   display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
@@ -1900,35 +1900,53 @@ body.is-generating .orb-a {
 .param-panel { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* ============================================================
-   V26.9.9-dev2: 底部 chip 工具条
+   V26.9.9-dev3: 精致底部 chip 工具条
    ============================================================ */
+#paramForm { flex: 1; min-height: 0; }
 .chip-bar {
-  display: flex; align-items: center; gap: 6px; padding: 8px 0;
-  border-top: 1px solid var(--border-soft); margin-top: 8px;
-  position: relative; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 12px; margin-top: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: sticky; bottom: 0; z-index: 5;
 }
 .chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 6px 10px; border-radius: 7px;
-  background: var(--surface-2); border: 1px solid var(--border);
-  color: var(--text-muted); font-size: 12px; cursor: pointer;
-  transition: all var(--transition); white-space: nowrap;
-  max-width: 140px; overflow: hidden; text-overflow: ellipsis;
-}
-.chip:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
-.chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chip-divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
-.chip-run {
-  margin-left: auto; padding: 7px 16px; border-radius: 20px;
-  background: var(--brand); color: #fff; border: none;
-  font-size: 13px; font-weight: 600; cursor: pointer;
   display: inline-flex; align-items: center; gap: 5px;
-  box-shadow: 0 3px 10px rgba(88,104,236,.3);
-  transition: all var(--transition);
+  padding: 6px 12px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition);
+  white-space: nowrap; max-width: 140px;
+  overflow: hidden; text-overflow: ellipsis;
 }
-.chip-run:hover { background: var(--brand-hover); transform: translateY(-1px); }
+.chip:hover {
+  border-color: var(--brand); color: var(--text);
+  background: var(--brand-soft);
+}
+.chip svg { width: 12px; height: 12px; flex-shrink: 0; opacity: .7; }
+.chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
+
+/* 生成按钮: ⚡费用 + ↑箭头 */
+.chip-run {
+  margin-left: auto; padding: 6px 4px 6px 12px;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--brand); color: #fff;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 3px 10px rgba(88,104,236,.25);
+  transition: all var(--transition); flex-shrink: 0;
+}
+.chip-run:hover { background: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 5px 14px rgba(88,104,236,.35); }
 .chip-run:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.chip-run svg { width: 14px; height: 14px; }
+.chip-run .chip-run-cost { font-size: 11px; opacity: .85; display: flex; align-items: center; gap: 3px; }
+.chip-run .chip-run-cost svg { width: 10px; height: 10px; }
+.chip-run .chip-run-arrow {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center;
+}
+.chip-run .chip-run-arrow svg { width: 13px; height: 13px; }
 
 /* chip 弹出浮层 */
 .chip-popover {
@@ -4615,6 +4633,15 @@ const UI = {
     this._restoreFormFromCache();
   },
 
+  // V26.9.9-dev3: 同步读取费用估算（用于 chip-run 按钮实时显示）
+  _getEstimateCost() {
+    try {
+      const body = this._collectParamsSync();
+      const est = calcEstimate(this.state.model, body);
+      return est?.amount != null ? est.amount : null;
+    } catch { return null; }
+  },
+
   _renderChipBar(model) {
     const form = $('#paramForm');
     if (!form) return;
@@ -4635,18 +4662,34 @@ const UI = {
     // 构建 chip
     let chipsHtml = '<div class="chip-bar">';
 
-    // 模型 chip（仅在多模型 tab 显示）
+    // 模型 chip（仅在多模型 tab 显示，带图标）
     if (MODELS[tab] && MODELS[tab].length > 1) {
-      chipsHtml += `<button class="chip" data-chip="model" title="切换模型"><span>${esc(m.name)}</span></button>`;
+      chipsHtml += `<button class="chip" data-chip="model" title="切换模型"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>${esc(m.name)}</span></button>`;
       chipsHtml += '<div class="chip-divider"></div>';
     }
 
-    // 根据 params 构建 chip（select / range）
+    // 分辨率+比例融合 chip（仅当两者同时存在）
+    const sizeParam = m.params.find(p => p.key === 'size' || p.key === 'resolution');
+    const ratioParam = m.params.find(p => p.key === 'aspectRatio' || p.key === 'ratio');
+    const fusePreset = !!(sizeParam && ratioParam);
+    if (fusePreset) {
+      const sizeVal = getVal(sizeParam.key) || sizeParam.default || '';
+      const ratioVal = getVal(ratioParam.key) || ratioParam.default || '';
+      chipsHtml += `<button class="chip" data-chip="preset" title="分辨率与比例"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg><span>${esc(ratioVal)} · ${esc(sizeVal)}</span></button>`;
+      chipsHtml += '<div class="chip-divider"></div>';
+    }
+
+    // 其他参数 chip（select / range / datalist）
     m.params.forEach(p => {
       if (p.type === 'select' || p.type === 'range' || p.type === 'datalist') {
+        // 跳过已融合的 size 和 ratio
+        if (fusePreset && (p.key === sizeParam.key || p.key === ratioParam.key)) return;
         const val = getVal(p.key) || p.default || '';
         const label = p.type === 'range' ? `${val}${p.unit||''}` : val;
-        chipsHtml += `<button class="chip" data-chip="${esc(p.key)}" data-label="${esc(p.label)}" title="${esc(p.label)}"><span>${esc(label)}</span></button>`;
+        // 为时长/语速类参数加图标
+        let icon = '';
+        if (p.key === 'duration' || p.key === 'speed') icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+        chipsHtml += `<button class="chip" data-chip="${esc(p.key)}" data-label="${esc(p.label)}" title="${esc(p.label)}">${icon}<span>${esc(label)}</span></button>`;
       }
     });
 
@@ -4656,8 +4699,13 @@ const UI = {
       chipsHtml += `<button class="chip" data-chip="count" data-label="数量" title="生成数量"><span>${n}x</span></button>`;
     }
 
-    // 生成按钮（替代隐藏的 #generateBtn）
-    chipsHtml += `<button class="chip-run" id="chipGenerateBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>生成</button>`;
+    // 生成按钮: ⚡费用 + ↑箭头（替代隐藏的 #generateBtn）
+    const cost = this._getEstimateCost();
+    const costStr = cost != null ? cost.toFixed(2) : '—';
+    chipsHtml += `<button class="chip-run" id="chipGenerateBtn">
+      <span class="chip-run-cost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>${costStr}</span>
+      <span class="chip-run-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
+    </button>`;
     chipsHtml += '</div>';
 
     form.insertAdjacentHTML('beforeend', chipsHtml);
@@ -4742,6 +4790,72 @@ const UI = {
           popover.remove();
           // 刷新 chip 显示
           this._renderChipBar(model);
+        });
+      });
+    } else if (key === 'preset') {
+      // V26.9.9-dev3: 分辨率+比例融合浮层
+      const sizeParam = model.params.find(p => p.key === 'size' || p.key === 'resolution');
+      const ratioParam = model.params.find(p => p.key === 'aspectRatio' || p.key === 'ratio');
+      if (!sizeParam && !ratioParam) return;
+      const sizeVal = form.querySelector(`[data-key="${sizeParam?.key}"]`)?.value || sizeParam?.default || '';
+      const ratioVal = form.querySelector(`[data-key="${ratioParam?.key}"]`)?.value || ratioParam?.default || '';
+
+      let innerHtml = `<div class="chip-popover-title">分辨率与比例</div>`;
+      // 分辨率分段选择器
+      if (sizeParam) {
+        innerHtml += `<div style="font-size:10px;color:var(--text-dim);padding:4px 6px 2px">分辨率</div>`;
+        innerHtml += `<div class="chip-popover-segment">`;
+        (sizeParam.options || []).forEach(o => {
+          const v = typeof o === 'string' ? o : o.value;
+          const l = typeof o === 'string' ? o : o.label;
+          innerHtml += `<button class="${String(v) === String(sizeVal) ? 'active' : ''}" data-val="${esc(v)}" data-target="${esc(sizeParam.key)}">${esc(l)}</button>`;
+        });
+        innerHtml += `</div>`;
+      }
+      // 比例网格
+      if (ratioParam) {
+        innerHtml += `<div style="font-size:10px;color:var(--text-dim);padding:8px 6px 2px">比例</div>`;
+        innerHtml += `<div class="chip-popover-grid">`;
+        (ratioParam.options || []).forEach(o => {
+          const v = typeof o === 'string' ? o : o.value;
+          const l = typeof o === 'string' ? o : o.label;
+          innerHtml += `<button class="${String(v) === String(ratioVal) ? 'active' : ''}" data-val="${esc(v)}" data-target="${esc(ratioParam.key)}">${esc(l)}</button>`;
+        });
+        innerHtml += `</div>`;
+      }
+
+      const popover = document.createElement('div');
+      popover.className = 'chip-popover show';
+      popover.innerHTML = innerHtml;
+      chip.parentElement.appendChild(popover);
+
+      // 浮层选择后同步表单（不关闭浮层，让用户继续选其他参数）
+      popover.querySelectorAll('[data-val]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.dataset.val;
+          const target = btn.dataset.target;
+          const input = form.querySelector(`[data-key="${target}"]`);
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change'));
+            input.dispatchEvent(new Event('input'));
+          }
+          // 只更新当前组的选中状态（不关闭浮层）
+          const siblings = btn.parentElement.querySelectorAll('[data-val]');
+          siblings.forEach(s => s.classList.remove('active'));
+          btn.classList.add('active');
+          // 局部更新 preset chip 文本（不重建 chip-bar，避免浮层被销毁）
+          const newSizeVal = form.querySelector(`[data-key="${sizeParam?.key}"]`)?.value || sizeParam?.default || '';
+          const newRatioVal = form.querySelector(`[data-key="${ratioParam?.key}"]`)?.value || ratioParam?.default || '';
+          const presetSpan = chip.querySelector('span');
+          if (presetSpan) presetSpan.textContent = `${newRatioVal} · ${newSizeVal}`;
+          // 局部更新生成按钮费用
+          const costBtn = $('#chipGenerateBtn');
+          if (costBtn) {
+            const cost = this._getEstimateCost();
+            const costStr = cost != null ? cost.toFixed(2) : '—';
+            costBtn.innerHTML = `<span class="chip-run-cost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>${costStr}</span><span class="chip-run-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>`;
+          }
         });
       });
     } else {
