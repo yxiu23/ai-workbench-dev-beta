@@ -70,7 +70,13 @@
   --shadow-sm: 0 1px 2px rgba(2,4,12,.30);
   --shadow-md: 0 2px 8px rgba(2,4,12,.22), 0 12px 32px rgba(2,4,12,.20);
   --shadow-lg: 0 4px 16px rgba(2,4,12,.26), 0 24px 60px rgba(2,4,12,.36);
-  --glass-blur: blur(24px) saturate(160%);
+  /* dev4: 液态玻璃变量 */
+  --glass-bg: rgba(14,18,32,.55);
+  --glass-bg-hover: rgba(20,26,42,.65);
+  --glass-border: rgba(255,255,255,.08);
+  --glass-border-hover: rgba(255,255,255,.14);
+  --glass-blur: blur(24px) saturate(180%);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
   --bg-grad: radial-gradient(1100px 720px at 82% -12%, rgba(88,104,236,.12), transparent 56%), radial-gradient(820px 520px at -8% 30%, rgba(167,139,250,.055), transparent 55%), radial-gradient(760px 460px at 55% 115%, rgba(44,189,133,.045), transparent 55%);
 }
 [data-theme="light"] {
@@ -89,7 +95,13 @@
   --shadow-sm: 0 1px 2px rgba(23,32,64,.07);
   --shadow-md: 0 2px 8px rgba(23,32,64,.05), 0 12px 28px rgba(23,32,64,.07);
   --shadow-lg: 0 4px 16px rgba(23,32,64,.06), 0 24px 56px rgba(23,32,64,.13);
-  --glass-blur: blur(16px) saturate(150%);
+  /* dev4: 液态玻璃变量 */
+  --glass-bg: rgba(255,255,255,.65);
+  --glass-bg-hover: rgba(255,255,255,.78);
+  --glass-border: rgba(255,255,255,.60);
+  --glass-border-hover: rgba(0,0,0,.10);
+  --glass-blur: blur(20px) saturate(160%);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.50);
   --bg-grad: radial-gradient(1100px 720px at 82% -12%, rgba(88,104,236,.075), transparent 56%), radial-gradient(820px 520px at -8% 30%, rgba(167,139,250,.045), transparent 55%), radial-gradient(760px 460px at 55% 115%, rgba(44,189,133,.035), transparent 55%);
 }
 
@@ -168,15 +180,52 @@ textarea { resize: vertical; min-height: 80px; }
 /* ============================================================
    主体布局
    ============================================================ */
+/* dev4: 全屏结果区 + 悬浮参数面板（ComfyUI 风格） */
 .app-body {
-  display: grid; grid-template-columns: minmax(380px, 480px) 1fr;
-  flex: 1; min-height: 0; overflow: hidden;
+  display: block;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 .param-panel {
-  border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden;
-  padding: 14px; display: flex; flex-direction: column; gap: 16px;
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 100px);
+  z-index: 20;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  transition: all var(--transition);
 }
-.result-panel { overflow: hidden; display: flex; flex-direction: column; }
+.param-panel:hover { border-color: var(--glass-border-hover); }
+.param-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.result-panel {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 60px 20px 20px;
+}
 
 /* ============================================================
    Tabs (图片/视频/音频)
@@ -221,8 +270,13 @@ textarea { resize: vertical; min-height: 80px; }
 /* ============================================================
    提示词模块 (统一)
    ============================================================ */
+/* dev4: 液态玻璃提示词模块 */
 .prompt-module {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
   padding: 14px; display: flex; flex-direction: column; gap: 10px;
 }
 .prompt-head {
@@ -430,9 +484,28 @@ textarea { resize: vertical; min-height: 80px; }
 /* ============================================================
    结果面板
    ============================================================ */
+/* dev4: 顶栏（dormant — 当前 HTML 无 .app-header 元素，保留以备未来扩展） */
+.app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+}
+/* dev4: 结果区头部液态玻璃悬浮（实际承载 brand + 过滤 + 工具按钮） */
 .result-header {
-  display: flex; align-items: center; gap: 8px; padding: 10px 16px;
-  border-bottom: 1px solid var(--border); background: var(--surface);
+  position: fixed;
+  top: 0;
+  left: 0; right: 0;
+  z-index: 15;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
   flex-wrap: nowrap; overflow-x: auto; flex-shrink: 0;
   scrollbar-width: thin;
 }
@@ -590,18 +663,26 @@ textarea { resize: vertical; min-height: 80px; }
 /* ============================================================
    任务卡 / 结果卡 (v26.9.9-B: 四栏方块 · 极简按钮)
    ============================================================ */
+/* dev4: 液态玻璃任务卡 */
 .task-card {
   break-inside: avoid;
   width: 100%;
   margin-bottom: 12px;
-  border-radius: var(--radius-md);
+  border-radius: 14px;
   overflow: hidden;
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
-.task-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.task-card:hover {
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.20);
+}
 .task-card.status-succeeded { border-bottom: 3px solid var(--success); }
 .task-card.status-failed { border-bottom: 3px solid var(--danger); }
 .task-card.status-processing { border-bottom: 3px solid var(--brand); }
@@ -749,10 +830,16 @@ textarea { resize: vertical; min-height: 80px; }
 /* ============================================================
    对比模式
    ============================================================ */
+/* dev4: 液态玻璃对比栏 */
 .compare-bar {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
-  background: var(--bg-elev); border: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 40;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  z-index: 40;
 }
 .compare-bar.empty { display: none; }
 .compare-bar .compare-count { font-size: 12px; color: var(--text-muted); padding: 0 4px; }
@@ -859,9 +946,14 @@ textarea { resize: vertical; min-height: 80px; }
 /* ============================================================
    设置抽屉
    ============================================================ */
+/* dev4: 液态玻璃设置抽屉 */
 .settings-drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: 380px; max-width: 90vw;
-  background: var(--bg-elev); border-left: 1px solid var(--border); z-index: 70;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-left: 1px solid var(--glass-border);
+  z-index: 70;
   transform: translateX(100%); transition: transform 280ms cubic-bezier(.4,0,.2,1);
   display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
 }
@@ -1167,11 +1259,8 @@ input[type="range"].im-range {
    响应式 — 移动端适配 (iOS26 Liquid Glass + 安全区自适应)
    ============================================================ */
 
-/* 平板：窄屏双栏→单栏堆叠 */
+/* 平板：窄屏 — dev4 已改为全屏结果区 + 悬浮参数面板，不再需 grid */
 @media (max-width: 1024px) {
-  .app-body { grid-template-columns: 1fr; }
-  .param-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; }
-  .result-panel { min-height: 45vh; }
   .icon-btn-text { display: none; }
   .icon-btn { padding: 0 8px; }
 }
@@ -1207,13 +1296,23 @@ input[type="range"].im-range {
     display: none;
     overflow-y: auto;
   }
-  .param-panel.mobile-active { display: flex; }
-  .result-panel {
-    flex: 1;
-    min-height: 0;
-    display: none;
+  /* dev4: 手机端参数面板恢复为底部固定（不悬浮拖拽） */
+  .param-panel {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 100%;
+    max-height: 55vh;
+    border-radius: 18px 18px 0 0;
+    border-left: none; border-right: none; border-bottom: none;
+    padding: 0;
+    flex: none;
   }
-  .result-panel.mobile-active { display: flex; }
+  .param-panel.collapsed { max-height: 40px; }
+  .param-panel.mobile-active { display: flex; }
+  /* dev4: 手机端结果区 padding 收紧（result-header 已返回文档流） */
+  .result-panel {
+    padding: 8px 8px 20px;
+  }
   /* 移动端视图切换栏 — flex子元素，不遮挡内容 */
   .mobile-view-switch {
     display: flex !important;
@@ -1257,8 +1356,10 @@ input[type="range"].im-range {
   .tc-action { width: 28px; height: 28px; }
   /* V26.9.9: 手机端品牌名居中（桌面靠左） */
   .brand-mark { justify-content: center; }
-  /* 结果header紧凑 */
+  /* 结果header紧凑 — dev4: 手机端返回文档流，避免覆盖 mobile-view-switch */
   .result-header {
+    position: static;
+    top: auto; left: auto; right: auto;
     padding: 6px max(10px, var(--safe-left));
     gap: 4px;
     flex-wrap: nowrap;
@@ -1397,7 +1498,7 @@ body::before {
   opacity: .02; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
-.param-panel, .result-panel { position: relative; z-index: 1; }
+/* dev4: param-panel/result-panel 已改为 fixed/absolute 定位，无需该规则覆盖 */
 
 /* 模型类型色彩区分 */
 .tag.type-image { color: var(--brand); background: var(--brand-soft); }
@@ -1486,7 +1587,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 }
 
 /* --- 1a. 渐变描边玻璃：边框上亮下暗，玻璃边缘有了厚度 --- */
-.prompt-module,
+/* dev4: .prompt-module 已改为液态玻璃，从该渐变描边组中移除 */
 .param-group,
 .ref-section,
 .ref-mode-section,
@@ -1497,26 +1598,20 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 }
 
 /* --- 1b. 左上 1px 受光描边 + 右下 1px 暗边（保持实体边框的表面） --- */
-.task-card,
+/* dev4: .task-card 和 .compare-bar 已改为液态玻璃，从该高光描边组中移除 */
 .active-tasks-panel,
 .atp-card,
 .stats-card,
 .skeleton-card,
 .gallery-card,
 .tc-thumb,
-.history-item .h-thumb,
-.compare-bar {
+.history-item .h-thumb {
   box-shadow: inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
 }
 .task-card { position: relative; }
 
 /* hover 抬升：阴影统一向右下偏移，服从光源 */
-.task-card:hover {
-  box-shadow: 5px 9px 26px rgba(2,4,12,.30), inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
-}
-[data-theme="light"] .task-card:hover {
-  box-shadow: 5px 9px 22px rgba(23,32,64,.13), inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
-}
+/* dev4: task-card:hover 已交由液态玻璃版本处理，这里仅保留 gallery-card */
 .gallery-card:hover {
   box-shadow: 5px 9px 26px rgba(2,4,12,.32), inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
 }
@@ -1619,9 +1714,9 @@ body.is-generating .orb-a {
 .ambient-tint.glow { animation: ambient-illuminate 3s ease-out; }
 @keyframes ambient-illuminate { 0% { opacity: 0; } 18% { opacity: .42; } 100% { opacity: 0; } }
 
-/* 留白节奏：参数面板顶部呼吸空间（桌面端） */
+/* 留白节奏：参数面板顶部呼吸空间（桌面端） — dev4: 改为作用于 param-panel-body */
 @media (min-width: 1025px) {
-  .param-panel { padding-top: 26px; }
+  .param-panel-body { padding-top: 26px; }
 }
 
 /* 分组之间：渐隐分隔线代替实线 */
@@ -1774,7 +1869,7 @@ body.is-generating .orb-a {
 /* 移动端适配：展厅元素收拢 */
 @media (max-width: 1024px) {
   .brand-mark .brand-name { font-size: 13px; letter-spacing: .1em; }
-  .param-panel { padding-top: 14px; }
+  .param-panel-body { padding-top: 14px; }
   .lightbox .lb-art { max-width: 88vw; max-height: 65vh; }
   .lb-meta { min-width: 78vw; padding: 10px 14px 9px; }
   .lb-meta-prompt { -webkit-line-clamp: 1; }
@@ -1898,44 +1993,59 @@ body.is-generating .orb-a {
 /* V38: 隐藏参数面板侧边滚动条 */
 .param-panel::-webkit-scrollbar { width: 0; height: 0; }
 .param-panel { scrollbar-width: none; -ms-overflow-style: none; }
+/* dev4: 同样隐藏 param-panel-body 滚动条 */
+.param-panel-body::-webkit-scrollbar { width: 0; height: 0; }
+.param-panel-body { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* ============================================================
    V26.9.9-dev3: 精致底部 chip 工具条
    ============================================================ */
 #paramForm { flex: 1; min-height: 0; }
+/* dev4: chip-bar 液态玻璃 — 透明背景 + 顶部分隔线，边缘跨 param-panel-body padding */
 .chip-bar {
   display: flex; align-items: center; gap: 6px;
-  padding: 10px 12px; margin-top: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 0 -14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--glass-border);
   position: sticky; bottom: 0; z-index: 5;
 }
+/* dev4: chip 液态玻璃 */
 .chip {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 6px 12px; border-radius: 8px;
-  background: var(--surface-2); border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
   color: var(--text-muted); font-size: 12px; font-weight: 500;
   cursor: pointer; transition: all var(--transition);
   white-space: nowrap; max-width: 140px;
   overflow: hidden; text-overflow: ellipsis;
 }
 .chip:hover {
-  border-color: var(--brand); color: var(--text);
-  background: var(--brand-soft);
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--text);
 }
 .chip svg { width: 12px; height: 12px; flex-shrink: 0; opacity: .7; }
 .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip-divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
 
 /* 生成按钮: ⚡费用 + ↑箭头 */
+/* dev4: chip-run 液态玻璃强化 — brand 底色 + 内高光 + 品牌光晕 */
 .chip-run {
   margin-left: auto; padding: 6px 4px 6px 12px;
-  border-radius: 20px; border: 1px solid var(--border);
-  background: var(--brand); color: #fff;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: var(--brand);
+  backdrop-filter: none;
+  color: #fff;
   font-size: 12px; font-weight: 600; cursor: pointer;
   display: inline-flex; align-items: center; gap: 8px;
-  box-shadow: 0 3px 10px rgba(88,104,236,.25);
+  box-shadow: 0 4px 16px rgba(88,104,236,.35), inset 0 1px 0 rgba(255,255,255,.20);
   transition: all var(--transition); flex-shrink: 0;
 }
 .chip-run:hover { background: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 5px 14px rgba(88,104,236,.35); }
@@ -1949,10 +2059,15 @@ body.is-generating .orb-a {
 .chip-run .chip-run-arrow svg { width: 13px; height: 13px; }
 
 /* chip 弹出浮层 */
+/* dev4: 液态玻璃浮层 */
 .chip-popover {
   position: absolute; bottom: 100%; left: 0; margin-bottom: 6px;
-  background: var(--bg-elev); border: 1px solid var(--border);
-  border-radius: 10px; box-shadow: var(--shadow-lg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow);
   padding: 8px; z-index: 50; display: none;
   max-height: 280px; overflow-y: auto; min-width: 200px;
 }
@@ -1981,6 +2096,34 @@ body.is-generating .orb-a {
   cursor: pointer; transition: all var(--transition);
 }
 .chip-popover-segment button.active { background: var(--brand); color: #fff; }
+
+/* ============================================================
+   dev4: 悬浮参数面板 — 拖拽手柄 + 收起/展开
+   ============================================================ */
+.param-panel-handle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; cursor: grab;
+  border-bottom: 1px solid var(--glass-border);
+  user-select: none; flex-shrink: 0;
+}
+.param-panel-handle:active { cursor: grabbing; }
+.handle-dots { display: flex; gap: 3px; }
+.handle-dots span { width: 4px; height: 4px; border-radius: 50%; background: var(--text-dim); }
+.handle-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; flex: 1; }
+.handle-toggle {
+  width: 22px; height: 22px; border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg); color: var(--text-muted);
+  cursor: pointer; font-size: 14px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.handle-toggle:hover { color: var(--text); border-color: var(--glass-border-hover); }
+
+/* 收起状态 */
+.param-panel.collapsed { max-height: 40px; overflow: hidden; }
+.param-panel.collapsed .param-panel-handle { border-bottom: none; }
+.param-panel.collapsed .handle-toggle { transform: rotate(0deg); }
 
 </style>
 </head>
@@ -2012,6 +2155,14 @@ body.is-generating .orb-a {
 <div class="app-body">
   <!-- 参数面板 -->
   <aside class="param-panel mobile-active" id="paramPanel">
+    <!-- dev4: 悬浮面板拖拽手柄 + 收起/展开按钮 -->
+    <div class="param-panel-handle" id="paramPanelHandle">
+      <div class="handle-dots"><span></span><span></span><span></span></div>
+      <span class="handle-title">参数</span>
+      <button class="handle-toggle" id="paramToggle" title="收起/展开">—</button>
+    </div>
+    <!-- dev4: 面板内容容器（提供 padding + 滚动） -->
+    <div class="param-panel-body">
     <!-- V38 品牌字（衬线）— 标题嵌入 api.wuyinkeji.com 链接 -->
     <div class="brand-mark" aria-hidden="true">
       <span class="brand-name"><a href="https://api.wuyinkeji.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">修的媒体工作台</a></span>
@@ -2058,6 +2209,7 @@ body.is-generating .orb-a {
         </button>
       </div>
     </div>
+    </div><!-- /.param-panel-body -->
   </aside>
 
   <!-- 结果面板 -->
@@ -4453,6 +4605,37 @@ const UI = {
     btn.appendChild(ripple);
     setTimeout(() => ripple.remove(), 400);
   }, true);
+
+  // dev4: 悬浮参数面板 — 收起/展开 + 拖拽
+  $('#paramToggle')?.addEventListener('click', () => {
+    $('#paramPanel')?.classList.toggle('collapsed');
+  });
+
+  let dragStart = null;
+  $('#paramPanelHandle')?.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.handle-toggle')) return;
+    // 手机端不启用拖拽（保持底部固定）
+    if (window.innerWidth <= 768) return;
+    const panel = $('#paramPanel');
+    if (!panel) return;
+    const rect = panel.getBoundingClientRect();
+    dragStart = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragStart) return;
+    const panel = $('#paramPanel');
+    if (!panel) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    const newLeft = Math.max(10, Math.min(window.innerWidth - panel.offsetWidth - 10, dragStart.left + dx));
+    const newTop = Math.max(60, Math.min(window.innerHeight - 60, dragStart.top + dy));
+    panel.style.left = newLeft + 'px';
+    panel.style.top = newTop + 'px';
+    panel.style.bottom = 'auto';
+    panel.style.right = 'auto';
+  });
+  document.addEventListener('mouseup', () => { dragStart = null; });
 
   },
 
