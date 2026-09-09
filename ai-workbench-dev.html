@@ -494,14 +494,13 @@ textarea { resize: vertical; min-height: 80px; }
 #restoreBtn:hover { background: var(--brand-soft); color: var(--brand); }
 
 .result-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
-/* v26.9.9-B: 结果列表四栏方块（桌面4列，手机2列） */
-.result-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+/* v26.9.9-B: 结果列表 masonry 瀑布流（桌面4列，平板3列，手机2列） */
+.result-list { columns: 4; column-gap: 12px; }
 .result-list.gallery-view {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;
+  columns: auto; column-gap: 12px;
 }
-@media (max-width: 768px) {
-  .result-list { grid-template-columns: repeat(2, 1fr) !important; }
-}
+@media (max-width: 1200px) { .result-list { columns: 3; } }
+@media (max-width: 768px) { .result-list { columns: 2; } }
 .gallery-card {
   border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--surface);
   cursor: pointer; transition: all var(--transition); position: relative;
@@ -592,6 +591,9 @@ textarea { resize: vertical; min-height: 80px; }
    任务卡 / 结果卡 (v26.9.9-B: 四栏方块 · 极简按钮)
    ============================================================ */
 .task-card {
+  break-inside: avoid;
+  width: 100%;
+  margin-bottom: 12px;
   border-radius: var(--radius-md);
   overflow: hidden;
   position: relative;
@@ -600,43 +602,54 @@ textarea { resize: vertical; min-height: 80px; }
   transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 .task-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.task-card.status-succeeded { border-left: 3px solid var(--success); }
-.task-card.status-failed { border-left: 3px solid var(--danger); }
-.task-card.status-processing { border-left: 3px solid var(--brand); }
-.task-card.status-timeout { border-left: 3px solid var(--warning); }
+.task-card.status-succeeded { border-bottom: 3px solid var(--success); }
+.task-card.status-failed { border-bottom: 3px solid var(--danger); }
+.task-card.status-processing { border-bottom: 3px solid var(--brand); }
+.task-card.status-timeout { border-bottom: 3px solid var(--warning); }
 
-/* 正方形缩略图占满整张卡片 */
+/* masonry 卡片缩略图：宽度填满列，高度由图片比例决定 */
 .tc-thumb {
   position: relative;
-  aspect-ratio: 1;
   overflow: hidden;
   cursor: pointer;
   background: var(--surface-2);
+  min-height: 140px;
 }
-.tc-thumb img, .tc-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tc-thumb .tc-thumb-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+.tc-thumb img, .tc-thumb video { width: 100%; height: auto; display: block; }
+.tc-thumb .tc-thumb-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
 .tc-thumb .tc-thumb-icon svg { width: 36px; height: 36px; opacity: .6; }
 
-/* 右上角：对比选框按钮（精致的 SVG 复选框） */
+/* 右上角：对比选框按钮（简约圆圈；hover 卡片才显示，选中后常显） */
 .tc-compare-btn {
   position: absolute; top: 6px; right: 6px;
-  width: 28px; height: 28px;
-  border-radius: 7px;
-  border: none;
-  background: rgba(0,0,0,.5);
-  color: rgba(255,255,255,.8);
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(255,255,255,.4);
+  background: rgba(0,0,0,.3);
+  color: rgba(255,255,255,.6);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background var(--transition), color var(--transition), transform var(--transition);
+  transition: all var(--transition);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 3;
   padding: 0;
+  opacity: 0;
 }
-.tc-compare-btn svg { width: 16px; height: 16px; display: block; }
-.tc-compare-btn:hover { background: rgba(0,0,0,.7); transform: scale(1.06); }
-.tc-compare-btn.active { background: var(--brand); color: #fff; }
-.tc-compare-btn.active:hover { background: var(--brand-hover, #4a5ce0); }
+.task-card:hover .tc-compare-btn { opacity: 1; }
+.tc-compare-btn:hover { border-color: rgba(255,255,255,.8); }
+.tc-compare-btn.active {
+  opacity: 1;
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+.tc-compare-btn.active:hover { background: var(--brand-hover, #4a5ce0); border-color: var(--brand-hover, #4a5ce0); }
+.tc-compare-btn svg { width: 14px; height: 14px; display: block; }
+/* 手机端常显 */
+@media (max-width: 768px) {
+  .tc-compare-btn { opacity: 0.7; }
+}
 
 /* 底部按钮栏：4 个图标按钮（hover 显示，手机端常显） */
 .tc-actions {
@@ -664,18 +677,7 @@ textarea { resize: vertical; min-height: 80px; }
 .tc-action.tc-action-del:hover,
 .tc-action.del:hover { background: var(--danger); }
 
-/* 状态徽标（保留极简点状指示器，无文字） */
-.tc-thumb-status { position: absolute; top: 6px; left: 6px; z-index: 3; }
-.tc-thumb-status .status-pill {
-  display: inline-block; width: 8px; height: 8px; padding: 0; border-radius: 50%;
-  background: var(--text-dim); font-size: 0; line-height: 0;
-  box-shadow: 0 0 0 2px rgba(0,0,0,.25);
-}
-.tc-thumb-status .status-pill.processing { background: var(--brand); animation: tc-pulse 1.2s ease-in-out infinite; }
-.tc-thumb-status .status-pill.succeeded { background: var(--success); }
-.tc-thumb-status .status-pill.failed { background: var(--danger); }
-.tc-thumb-status .status-pill.timeout { background: var(--warning); }
-@keyframes tc-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+/* 状态徽标已下移为卡片底部色条（border-bottom），左上角绿点移除 */
 
 /* 处理中：极光占位 + 中央进度环已由 .aurora-ph 提供 */
 /* 失败：图标已通过 .tc-thumb-icon 内联色提供 */
@@ -743,43 +745,6 @@ textarea { resize: vertical; min-height: 80px; }
 .error-banner .err-actions { margin-top: 6px; display: flex; gap: 6px; }
 .error-banner .err-actions button { padding: 4px 8px; border-radius: var(--radius-sm); background: var(--surface); font-size: 11px; color: var(--text); }
 .error-banner .err-actions button:hover { background: var(--danger); color: #fff; }
-
-/* ============================================================
-   结果缩略图条 (V50 redesign)
-   ============================================================ */
-.result-strip {
-  display: flex; gap: 8px; padding: 10px 16px;
-  border-top: 1px solid var(--border);
-  overflow-x: auto; flex-shrink: 0; background: var(--surface);
-  scrollbar-width: thin;
-}
-.result-strip.empty { display: none; }
-.result-strip::-webkit-scrollbar { height: 6px; }
-.result-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-.result-strip .strip-thumb {
-  width: 88px; height: 88px; border-radius: 8px; overflow: hidden;
-  flex-shrink: 0; cursor: pointer; border: 2px solid transparent;
-  transition: all 0.2s; position: relative; background: var(--surface-2);
-}
-.result-strip .strip-thumb:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-.result-strip .strip-thumb.active { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
-.result-strip .strip-thumb img, .result-strip .strip-thumb video { width: 100%; height: 100%; object-fit: cover; }
-.result-strip .strip-thumb .strip-type-badge {
-  position: absolute; bottom: 4px; right: 4px;
-  background: rgba(0,0,0,0.7); color: white; border-radius: 4px;
-  padding: 2px 6px; font-size: 10px; backdrop-filter: blur(4px);
-  pointer-events: none;
-}
-.result-strip .strip-thumb .strip-icon-only {
-  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  color: var(--text-dim); background: linear-gradient(135deg, var(--surface-2), var(--surface));
-}
-.result-strip .strip-thumb .strip-icon-only svg { width: 32px; height: 32px; }
-.result-strip .strip-count {
-  flex-shrink: 0; display: flex; align-items: center; padding: 0 8px;
-  color: var(--text-dim); font-size: 12px; white-space: nowrap;
-  border-right: 1px solid var(--border); margin-right: 4px;
-}
 
 /* ============================================================
    对比模式
@@ -1281,8 +1246,8 @@ input[type="range"].im-range {
     border-radius: 9px;
   }
   .header-btn svg, .icon-btn svg { width: 18px; height: 18px; }
-  /* 结果区：手机端 2 列方块，按钮常显 */
-  .result-list { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  /* 结果区：手机端 2 列 masonry，按钮常显 */
+  .result-list { column-gap: 8px; }
   .result-body {
     padding: 8px max(12px, var(--safe-left));
   }
@@ -1290,8 +1255,6 @@ input[type="range"].im-range {
   .tc-actions { opacity: 1 !important; }
   .tc-compare-btn { width: 26px; height: 26px; }
   .tc-action { width: 28px; height: 28px; }
-  /* V26.9.9: 手机端隐藏底部最近项条（用列表查看即可） */
-  .result-strip { display: none !important; }
   /* V26.9.9: 手机端品牌名居中（桌面靠左） */
   .brand-mark { justify-content: center; }
   /* 结果header紧凑 */
@@ -1542,7 +1505,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 .gallery-card,
 .tc-thumb,
 .history-item .h-thumb,
-.result-strip .strip-thumb,
 .compare-bar {
   box-shadow: inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
 }
@@ -1560,9 +1522,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 }
 [data-theme="light"] .gallery-card:hover {
   box-shadow: 5px 9px 22px rgba(23,32,64,.13), inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
-}
-.result-strip .strip-thumb:hover {
-  box-shadow: 3px 5px 14px rgba(2,4,12,.35), inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
 }
 
 /* --- 1c. 衬线品牌字：美术馆配方，标题衬线、正文黑体 --- */
@@ -1666,7 +1625,7 @@ body.is-generating .orb-a {
 }
 
 /* 分组之间：渐隐分隔线代替实线 */
-.result-header, .result-strip, .modal-header, .modal-footer, .settings-header,
+.result-header, .modal-header, .modal-footer, .settings-header,
 .history-header, .history-search, .history-filters, .history-footer,
 .tc-actions, .card-top, .prompt-history-list .ph-item, .kv-row, .settings-toggle {
   border-image: linear-gradient(90deg, transparent, var(--border) 16%, var(--border) 84%, transparent) 1 stretch;
@@ -1940,6 +1899,71 @@ body.is-generating .orb-a {
 .param-panel::-webkit-scrollbar { width: 0; height: 0; }
 .param-panel { scrollbar-width: none; -ms-overflow-style: none; }
 
+/* ============================================================
+   V26.9.9-dev2: 底部 chip 工具条
+   ============================================================ */
+.chip-bar {
+  display: flex; align-items: center; gap: 6px; padding: 8px 0;
+  border-top: 1px solid var(--border-soft); margin-top: 8px;
+  position: relative; flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 10px; border-radius: 7px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 12px; cursor: pointer;
+  transition: all var(--transition); white-space: nowrap;
+  max-width: 140px; overflow: hidden; text-overflow: ellipsis;
+}
+.chip:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+.chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-divider { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+.chip-run {
+  margin-left: auto; padding: 7px 16px; border-radius: 20px;
+  background: var(--brand); color: #fff; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  box-shadow: 0 3px 10px rgba(88,104,236,.3);
+  transition: all var(--transition);
+}
+.chip-run:hover { background: var(--brand-hover); transform: translateY(-1px); }
+.chip-run:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.chip-run svg { width: 14px; height: 14px; }
+
+/* chip 弹出浮层 */
+.chip-popover {
+  position: absolute; bottom: 100%; left: 0; margin-bottom: 6px;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: var(--shadow-lg);
+  padding: 8px; z-index: 50; display: none;
+  max-height: 280px; overflow-y: auto; min-width: 200px;
+}
+.chip-popover.show { display: block; }
+.chip-popover-title { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; padding: 2px 6px 6px; }
+.chip-popover-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 7px 10px; border-radius: 6px; border: none;
+  background: transparent; color: var(--text); font-size: 12px;
+  cursor: pointer; transition: all var(--transition); text-align: left;
+}
+.chip-popover-item:hover { background: var(--surface-2); }
+.chip-popover-item.active { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.chip-popover-grid { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; }
+.chip-popover-grid button {
+  padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-muted); font-size: 11px;
+  cursor: pointer; transition: all var(--transition); min-width: 48px;
+}
+.chip-popover-grid button:hover { border-color: var(--brand); color: var(--brand); }
+.chip-popover-grid button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.chip-popover-segment { display: flex; gap: 2px; padding: 4px; background: var(--surface-2); border-radius: 7px; }
+.chip-popover-segment button {
+  flex: 1; padding: 5px 10px; border-radius: 5px; border: none;
+  background: transparent; color: var(--text-muted); font-size: 11px;
+  cursor: pointer; transition: all var(--transition);
+}
+.chip-popover-segment button.active { background: var(--brand); color: #fff; }
+
 </style>
 </head>
 <body>
@@ -2006,14 +2030,6 @@ body.is-generating .orb-a {
         </button>
         <button class="workflow-btn" id="importWorkflowBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导入工作流
-        </button>
-      </div>
-      <div class="workflow-row">
-        <button class="workflow-btn" id="batchGenBtn" title="批量生成：同提示词提交到多个模型">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>批量生成
-        </button>
-        <button class="workflow-btn" id="batchExportBtn" title="批量导出所有成功结果 URL">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>批量导出
         </button>
       </div>
       <div class="estimate-cost" id="estimateCost">预计 —</div>
@@ -2087,7 +2103,6 @@ body.is-generating .orb-a {
         </div>
       </div>
     </div>
-    <div class="result-strip empty" id="resultStrip"></div>
   </main>
 </div>
 
@@ -4133,7 +4148,6 @@ const UI = {
     this.applyTheme();
     this.bindEvents();
     this.switchTab('image');
-    this._renderResultStrip();
 
     poller.resumeAll();
     this._bindConnectivity();
@@ -4227,6 +4241,20 @@ const UI = {
       });
     } catch (e) { /* silent */ }
   },
+  // V36: 删除后立即同步 R2，避免 30s 防抖窗口内刷新导致云端旧数据回填
+  async _syncHistoryToCloudNow() {
+    if (!TaskCenter.isAvailable()) return;
+    try {
+      const hist = Store.getHistory();
+      const top = hist.slice(0, 500);
+      await fetch(TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(top)
+      });
+      console.log('[history] 已立即同步到R2');
+    } catch (e) { console.warn('[history] 同步失败:', e.message); }
+  },
   async _syncHistoryFromCloud() {
     if (!TaskCenter.isAvailable()) return;
     try {
@@ -4236,8 +4264,6 @@ const UI = {
         const local = Store.getHistory();
         const merged = this._mergeHistory(local, data.data);
         Store.saveHistory(merged);
-        // V26.9.9: 同步后刷新最近项
-        this._renderResultStrip();
         // V26.9.9: 后台归档未转存的历史记录 (速创URL → R2)
         this._archivePendingHistory();
       }
@@ -4294,8 +4320,6 @@ const UI = {
     $('#generateBtn').addEventListener('click', () => this.handleGenerate());
     $('#copyWorkflowBtn').addEventListener('click', () => { const task = this._buildCurrentTask(); if (task) Workflow.copy(task); });
     $('#importWorkflowBtn').addEventListener('click', () => { $('#workflowInput').value = ''; $('#workflowOverlay').classList.add('show'); });
-    $('#batchGenBtn').addEventListener('click', () => this._openBatchGenerate());
-    $('#batchExportBtn').addEventListener('click', () => this._openBatchExport());
     $('#workflowApply').addEventListener('click', () => { const text = $('#workflowInput').value.trim(); if (text) { Workflow.apply(text); $('#workflowOverlay').classList.remove('show'); } });
     $('#workflowCancel').addEventListener('click', () => $('#workflowOverlay').classList.remove('show'));
     $('#workflowClose').addEventListener('click', () => $('#workflowOverlay').classList.remove('show'));
@@ -4425,8 +4449,6 @@ const UI = {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); this._openHistory(); $('#historySearchInput').focus(); return; }
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); this._openPresetPicker(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); this._openBatchExport(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'g') { e.preventDefault(); this._openBatchGenerate(); return; }
       if (e.key === '/') { e.preventDefault(); const el = $('[data-key="prompt"], [data-key="text"]'); if (el) el.focus(); return; }
       if (e.key === '?') { e.preventDefault(); this._showKeyboardHelp(); return; }
     });
@@ -4437,8 +4459,6 @@ const UI = {
       ['Esc', '关闭弹窗 / 遮罩'],
       ['Ctrl/⌘ + K', '打开历史搜索'],
       ['Ctrl/⌘ + P', '打开提示词预设'],
-      ['Ctrl/⌘ + B', '批量导出结果 URL'],
-      ['Ctrl/⌘ + G', '批量生成（多模型）'],
       ['/', '聚焦提示词输入框'],
       ['Ctrl/⌘ + Enter', '触发生成'],
       ['?', '显示此快捷键帮助'],
@@ -4579,6 +4599,223 @@ const UI = {
     this._renderAllRefGrids();
     this._updateEstimate();
     this.renderPresets();
+    // V26.9.9-dev2: 追加底部 chip 工具条（隐藏原有 select/range 控件，由 chip 替代）
+    this._renderChipBar(model);
+  },
+
+  /* ---------- V26.9.9-dev2: chip 工具条 ---------- */
+  switchModel(modelId) {
+    const m = MODELS[this.state.tab].find(x => x.id === modelId);
+    if (!m) return;
+    this._saveFormToCache();
+    this.state.model = m;
+    this.state.modelKey = `${this.state.tab}/${m.id}`;
+    this._updateModelBar();
+    this.renderParamForm(m.id);
+    this._restoreFormFromCache();
+  },
+
+  _renderChipBar(model) {
+    const form = $('#paramForm');
+    if (!form) return;
+    // 移除旧 chip-bar 及残留浮层
+    form.querySelector('.chip-bar')?.remove();
+    form.querySelectorAll('.chip-popover').forEach(p => p.remove());
+
+    const tab = this.state.tab;
+    const m = this.state.model;
+    if (!m) return;
+
+    // 读取当前表单值
+    const getVal = (key) => {
+      const el = form.querySelector(`[data-key="${key}"]`);
+      return el?.value || '';
+    };
+
+    // 构建 chip
+    let chipsHtml = '<div class="chip-bar">';
+
+    // 模型 chip（仅在多模型 tab 显示）
+    if (MODELS[tab] && MODELS[tab].length > 1) {
+      chipsHtml += `<button class="chip" data-chip="model" title="切换模型"><span>${esc(m.name)}</span></button>`;
+      chipsHtml += '<div class="chip-divider"></div>';
+    }
+
+    // 根据 params 构建 chip（select / range）
+    m.params.forEach(p => {
+      if (p.type === 'select' || p.type === 'range' || p.type === 'datalist') {
+        const val = getVal(p.key) || p.default || '';
+        const label = p.type === 'range' ? `${val}${p.unit||''}` : val;
+        chipsHtml += `<button class="chip" data-chip="${esc(p.key)}" data-label="${esc(p.label)}" title="${esc(p.label)}"><span>${esc(label)}</span></button>`;
+      }
+    });
+
+    // 图片模式追加数量 chip
+    if (tab === 'image') {
+      const n = this.state._genCount || 1;
+      chipsHtml += `<button class="chip" data-chip="count" data-label="数量" title="生成数量"><span>${n}x</span></button>`;
+    }
+
+    // 生成按钮（替代隐藏的 #generateBtn）
+    chipsHtml += `<button class="chip-run" id="chipGenerateBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>生成</button>`;
+    chipsHtml += '</div>';
+
+    form.insertAdjacentHTML('beforeend', chipsHtml);
+
+    // 绑定 chip 点击
+    form.querySelectorAll('.chip[data-chip]').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._showChipPopover(chip, model);
+      });
+    });
+
+    // 绑定生成按钮
+    const chipGenBtn = $('#chipGenerateBtn');
+    if (chipGenBtn) {
+      chipGenBtn.addEventListener('click', () => this.handleGenerate());
+      // 与旧 #generateBtn 同步禁用态
+      const oldBtn = $('#generateBtn');
+      if (oldBtn) {
+        const sync = () => { chipGenBtn.disabled = oldBtn.disabled; };
+        // 初次同步
+        sync();
+        // 通过 MutationObserver 监听 disabled 变化
+        new MutationObserver(sync).observe(oldBtn, { attributes: true, attributeFilter: ['disabled'] });
+      }
+    }
+
+    // 隐藏原有的 select / range / datalist 控件及其父行
+    form.querySelectorAll('select, input[type="range"]').forEach(el => {
+      el.style.display = 'none';
+      const row = el.closest('.param-group, .field-row');
+      if (row && (row.querySelector('select') || row.querySelector('input[type="range"]'))) {
+        row.style.display = 'none';
+      }
+    });
+    // 也隐藏 select 的 2 列网格容器（无类名，靠 inline style grid 检测）
+    form.querySelectorAll('div[style*="grid-template-columns"]').forEach(div => {
+      if (div.children.length && Array.from(div.children).every(c => c.querySelector('select') || c.querySelector('input[type="range"]') || getComputedStyle(c).display === 'none')) {
+        div.style.display = 'none';
+      }
+    });
+    // 隐藏模型选择区（已由 chip 替代）
+    const msw = $('.model-select-wrap');
+    if (msw) msw.style.setProperty('display', 'none', 'important');
+    // 隐藏旧的生成操作区（已被 chip 生成按钮替代）
+    const gs = $('.generate-section');
+    if (gs) gs.style.setProperty('display', 'none', 'important');
+  },
+
+  _showChipPopover(chip, model) {
+    // 关闭其他浮层
+    document.querySelectorAll('.chip-popover.show').forEach(p => p.remove());
+
+    const key = chip.dataset.chip;
+    const form = $('#paramForm');
+
+    if (key === 'model') {
+      const tab = this.state.tab;
+      const models = MODELS[tab] || [];
+      const currentId = this.state.model?.id;
+      const html = `<div class="chip-popover show"><div class="chip-popover-title">模型</div>${models.map(m => `<button class="chip-popover-item ${m.id === currentId ? 'active' : ''}" data-model-id="${esc(m.id)}">${esc(m.name)}</button>`).join('')}</div>`;
+      chip.insertAdjacentHTML('afterend', html);
+      // 绑定选择
+      document.querySelectorAll('.chip-popover-item[data-model-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this.switchModel(btn.dataset.modelId);
+          document.querySelectorAll('.chip-popover.show').forEach(p => p.remove());
+        });
+      });
+    } else if (key === 'count') {
+      const current = this.state._genCount || 1;
+      let innerHtml = `<div class="chip-popover-title">生成数量</div><div class="chip-popover-segment">`;
+      [1,2,3,4].forEach(n => { innerHtml += `<button class="${n === current ? 'active' : ''}" data-count="${n}">${n}张</button>`; });
+      innerHtml += `</div>`;
+      const popover = document.createElement('div');
+      popover.className = 'chip-popover show';
+      popover.innerHTML = innerHtml;
+      chip.parentElement.appendChild(popover);
+      popover.querySelectorAll('[data-count]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this.state._genCount = parseInt(btn.dataset.count, 10);
+          popover.remove();
+          // 刷新 chip 显示
+          this._renderChipBar(model);
+        });
+      });
+    } else {
+      // 参数 chip（select / range / datalist）
+      const param = model.params.find(p => p.key === key);
+      if (!param) return;
+      const currentVal = form.querySelector(`[data-key="${key}"]`)?.value || param.default || '';
+
+      let innerHtml = '';
+      if (param.type === 'select') {
+        innerHtml = `<div class="chip-popover-title">${esc(param.label)}</div><div class="chip-popover-grid">`;
+        if (param.options && Array.isArray(param.options) && typeof param.options[0] === 'object') {
+          innerHtml = `<div class="chip-popover-title">${esc(param.label)}</div>`;
+          innerHtml += param.options.map(o => `<button class="chip-popover-item ${String(o.value) === String(currentVal) ? 'active' : ''}" data-val="${esc(o.value)}">${esc(o.label)}</button>`).join('');
+        } else {
+          innerHtml += param.options.map(o => {
+            const v = typeof o === 'string' ? o : o.value;
+            const l = typeof o === 'string' ? o : o.label;
+            return `<button class="${String(v) === String(currentVal) ? 'active' : ''}" data-val="${esc(v)}">${esc(l)}</button>`;
+          }).join('');
+          innerHtml += `</div>`;
+        }
+      } else if (param.type === 'datalist') {
+        innerHtml = `<div class="chip-popover-title">${esc(param.label)}</div>`;
+        if (param.options && Array.isArray(param.options) && typeof param.options[0] === 'object') {
+          innerHtml += param.options.map(o => `<button class="chip-popover-item ${String(o.value) === String(currentVal) ? 'active' : ''}" data-val="${esc(o.value)}">${esc(o.label)}</button>`).join('');
+        }
+      } else if (param.type === 'range') {
+        const min = param.min || 0, max = param.max || 100, step = param.step || 1;
+        const unit = param.unit || '';
+        innerHtml = `<div class="chip-popover-title">${esc(param.label)}: ${currentVal}${unit}</div>`;
+        // 分段选择（若分段数 ≤ 12 用 segment，否则用 grid）
+        const segs = [];
+        for (let v = min; v <= max + 1e-9; v += step) segs.push(v);
+        if (segs.length <= 12) {
+          innerHtml += `<div class="chip-popover-segment">` + segs.map(v => `<button class="${String(v) === String(currentVal) ? 'active' : ''}" data-val="${v}">${v}${unit}</button>`).join('') + `</div>`;
+        } else {
+          // 步长大：用 grid 显示部分代表性值
+          innerHtml += `<div class="chip-popover-grid">` + segs.filter((_, i) => i % Math.ceil(segs.length / 20) === 0 || i === segs.length - 1).map(v => `<button class="${String(v) === String(currentVal) ? 'active' : ''}" data-val="${v}">${v}${unit}</button>`).join('') + `</div>`;
+        }
+      }
+
+      const popover = document.createElement('div');
+      popover.className = 'chip-popover show';
+      popover.innerHTML = innerHtml;
+      chip.parentElement.appendChild(popover);
+
+      // 绑定选择
+      popover.querySelectorAll('[data-val]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.dataset.val;
+          const input = form.querySelector(`[data-key="${key}"]`);
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change'));
+            input.dispatchEvent(new Event('input'));
+          }
+          popover.remove();
+          // 刷新 chip 显示
+          this._renderChipBar(model);
+        });
+      });
+    }
+
+    // 点击外部关闭
+    setTimeout(() => {
+      const closePop = (e) => {
+        if (!e.target.closest('.chip-popover') && !e.target.closest('.chip')) {
+          document.querySelectorAll('.chip-popover.show').forEach(p => p.remove());
+          document.removeEventListener('click', closePop);
+        }
+      };
+      document.addEventListener('click', closePop);
+    }, 0);
   },
 
   _buildRefModeSection(model) {
@@ -5449,61 +5686,69 @@ const UI = {
     this._generating = true;
     const btn = $('#generateBtn');
     btn.disabled = true; $('#generateBtnText').textContent = '生成中...'; // V36 UX: 统一为"生成中..."
+    // V26.9.9-dev2: 图片模式支持多张生成（_genCount chip）
+    const genCount = (this.state.tab === 'image' && this.state._genCount > 1) ? this.state._genCount : 1;
+    if (genCount > 1) Toast.info(`开始提交 ${genCount} 个任务...`);
     try {
       const body = await this._collectParamsAsync();
       const v = normalizeAndValidateApiBody(this.state.model, body);
       if (!v.ok) { Toast.error(v.error); return; }
       const prompt = body.prompt || body.text || '';
       if (prompt) Store.addPrompt(prompt);
-      const task = { id: genId(), model: this.state.model, body: v.body, prompt, status: 'processing', createdAt: Date.now(), apiId: null };
-      if (this.state.model.async) {
-        // V56: prefer TaskCenter if available; fall back to local Api.submit + poller
-        const useTaskCenter = TaskCenter.isAvailable();
-        try {
-          const res = useTaskCenter ? await TaskCenter.submit(task) : await Api.submit(this.state.model, v.body);
-          task.apiId = res.id;
-          task.dispatchedVia = useTaskCenter ? 'taskcenter' : 'direct';
-          const tasks = Store.getTasks();
-          tasks.unshift(task);
-          Store.saveTasks(tasks);
-          this._renderTask(task);
-          this._renderActiveTasks();
-          if (!useTaskCenter) poller.start(task);
-          // TaskCenter dispatches its own events → UI.onTaskResult via listeners
-          Toast.success(useTaskCenter ? '任务已提交到任务中心' : '任务已提交');
-        } catch (e) {
-          // Fallback: if TaskCenter failed, retry with direct Api.submit
-          if (useTaskCenter) {
-            console.warn('[TaskCenter] submit failed, falling back to direct:', e);
-            const res = await Api.submit(this.state.model, v.body);
+      const submitOnce = async (idx) => {
+        const task = { id: genId(), model: this.state.model, body: v.body, prompt, status: 'processing', createdAt: Date.now(), apiId: null };
+        if (this.state.model.async) {
+          // V56: prefer TaskCenter if available; fall back to local Api.submit + poller
+          const useTaskCenter = TaskCenter.isAvailable();
+          try {
+            const res = useTaskCenter ? await TaskCenter.submit(task) : await Api.submit(this.state.model, v.body);
             task.apiId = res.id;
-            task.dispatchedVia = 'direct';
+            task.dispatchedVia = useTaskCenter ? 'taskcenter' : 'direct';
             const tasks = Store.getTasks();
             tasks.unshift(task);
             Store.saveTasks(tasks);
             this._renderTask(task);
             this._renderActiveTasks();
-            poller.start(task);
-            Toast.success('任务中心不可用，已切换为本地直连');
-          } else {
-            throw e;
+            if (!useTaskCenter) poller.start(task);
+            // TaskCenter dispatches its own events → UI.onTaskResult via listeners
+            if (idx === 0) Toast.success(useTaskCenter ? '任务已提交到任务中心' : '任务已提交');
+          } catch (e) {
+            // Fallback: if TaskCenter failed, retry with direct Api.submit
+            if (useTaskCenter) {
+              console.warn('[TaskCenter] submit failed, falling back to direct:', e);
+              const res = await Api.submit(this.state.model, v.body);
+              task.apiId = res.id;
+              task.dispatchedVia = 'direct';
+              const tasks = Store.getTasks();
+              tasks.unshift(task);
+              Store.saveTasks(tasks);
+              this._renderTask(task);
+              this._renderActiveTasks();
+              poller.start(task);
+              if (idx === 0) Toast.success('任务中心不可用，已切换为本地直连');
+            } else {
+              throw e;
+            }
           }
+        } else {
+          $('#generateBtnText').textContent = '生成中...'; // V36 UX: 修正 — 只更新文字 span，避免覆盖按钮内 SVG
+          const data = await Api.syncCall(this.state.model, v.body);
+          const url = Api.extractUrl(data);
+          task.status = 'succeeded';
+          task.result = { url, data };
+          task.completedAt = Date.now();
+          const cost = calcEstimate(this.state.model, v.body);
+          task.cost = cost?.amount;
+          Store.addHistory({ id: task.id, model: task.model, prompt, body: v.body, status: 'succeeded', result: task.result, createdAt: task.createdAt, completedAt: task.completedAt, cost: task.cost });
+          this._renderTask(task);
+          if (idx === genCount - 1) Toast.success('生成完成');
+          this.playSuccessSound();
+          this._celebrate(task);
         }
-      } else {
-        $('#generateBtnText').textContent = '生成中...'; // V36 UX: 修正 — 只更新文字 span，避免覆盖按钮内 SVG
-        const data = await Api.syncCall(this.state.model, v.body);
-        const url = Api.extractUrl(data);
-        task.status = 'succeeded';
-        task.result = { url, data };
-        task.completedAt = Date.now();
-        const cost = calcEstimate(this.state.model, v.body);
-        task.cost = cost?.amount;
-        Store.addHistory({ id: task.id, model: task.model, prompt, body: v.body, status: 'succeeded', result: task.result, createdAt: task.createdAt, completedAt: task.completedAt, cost: task.cost });
-        this._renderTask(task);
-        this._renderResultStrip();
-        Toast.success('生成完成');
-        this.playSuccessSound();
-        this._celebrate(task);
+      };
+      // 顺序提交 N 次（避免并发限流）
+      for (let i = 0; i < genCount; i++) {
+        await submitOnce(i);
       }
     } catch (e) {
       Toast.error(e.message);
@@ -5696,7 +5941,6 @@ const UI = {
     this._updateTaskCard(task);
     this._renderActiveTasks();
     this._updateBudgetStatus();
-    this._renderResultStrip();
     this.renderHistoryBadge();
     this._updateTitle();
     this._refreshGenerateBtn(); // V36 UX: 任务结束刷新按钮文字
@@ -5714,7 +5958,6 @@ const UI = {
             storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(hist));
           }
           this._updateTaskCard(task);
-          this._renderResultStrip();
           if (task.model?.type === 'video') AmbientFX.illuminate(thumbUrl, 'video');
           // Refresh history sidebar if open
           if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
@@ -5795,7 +6038,6 @@ const UI = {
           ThumbService.lazyEnsureThumb(t, () => {
             // Re-render the specific card with new thumbUrl
             this._updateTaskCard(t);
-            this._renderResultStrip();
           });
         }
       });
@@ -5848,10 +6090,10 @@ const UI = {
     this._closeModal();
     this._renderTaskList();
     this._renderActiveTasks();
-    this._renderResultStrip();
     this.renderHistoryBadge();
     // V26.9.9-A: 批量删除后同步到 R2，避免云端 userdata/history 保留旧数据
-    this._scheduleHistorySync();
+    // V36: 改为立即同步，避免 30s 防抖窗口内刷新导致云端旧数据回填
+    this._syncHistoryToCloudNow();
     Toast.success(`已删除 ${items.length} 个结果`);
   },
 
@@ -5938,8 +6180,8 @@ const UI = {
     let compareBtnHtml = '';
     if (task.status === 'succeeded' && url && type === 'image') {
       const icon = inCompare
-        ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9 12 11 14 16 9" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 12 11 14 16 9"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`;
       compareBtnHtml = `<button class="tc-compare-btn${inCompare ? ' active' : ''}" data-act="compare" title="${inCompare ? '移出对比' : '加入对比'}" aria-pressed="${inCompare ? 'true' : 'false'}">${icon}</button>`;
     }
 
@@ -5972,16 +6214,12 @@ const UI = {
       `;
     }
 
-    // 状态点（无文字，仅颜色提示）
-    const statusDotHtml = `<span class="tc-thumb-status"><span class="status-pill ${task.status}"></span></span>`;
-
     // lightbox 仅对成功图片开启（点击缩略图触发预览）
     const lightboxAttr = (task.status === 'succeeded' && url && type === 'image') ? `data-lightbox="${esc(url)}"` : '';
 
     card.innerHTML = `
       <div class="tc-thumb" ${lightboxAttr}>
         ${thumbInnerHtml}
-        ${statusDotHtml}
         ${compareBtnHtml}
         ${actionsHtml ? `<div class="tc-actions">${actionsHtml}</div>` : ''}
       </div>
@@ -6093,33 +6331,6 @@ const UI = {
     panel.querySelectorAll('[data-cancel]').forEach(btn => btn.addEventListener('click', () => poller.manualStop(btn.dataset.cancel)));
   },
 
-  _renderResultStrip() {
-    const strip = $('#resultStrip');
-    // Bottom strip shows ALL recent succeeded items, ignoring hide state (per user request)
-    const history = Store.getHistory()
-      .filter(h => h.status === 'succeeded' && h.result?.url)
-      .slice(0, 20);
-    if (!history.length) { strip.classList.add('empty'); strip.innerHTML = ''; return; }
-    strip.classList.remove('empty');
-    strip.innerHTML = `<div class="strip-count">最近 ${history.length} 项</div>`;
-    history.forEach(h => {
-      const thumb = this._buildGalleryCard(h);
-      thumb.addEventListener('click', () => {
-        // Mark active highlight
-        this.state.activeStripTaskId = h.id;
-        strip.querySelectorAll('.strip-thumb').forEach(el => el.classList.remove('active'));
-        thumb.classList.add('active');
-        const urls = history.map(x => x.result.url);
-        const types = history.map(x => x.model?.type || 'image');
-        const idx = urls.indexOf(h.result.url);
-        const isVideo = types[idx] === 'video';
-        const isAudio = types[idx] === 'audio';
-        this._openLightbox(urls, idx, isVideo, isAudio);
-      });
-      strip.appendChild(thumb);
-    });
-  },
-
   _deleteTask(taskId) {
     let tasks = Store.getTasks().filter(t => t.id !== taskId);
     Store.saveTasks(tasks);
@@ -6129,7 +6340,6 @@ const UI = {
     // Remove all DOM cards with this ID (both list and gallery)
     $$(`[data-tid="${taskId}"]`).forEach(el => el.remove());
     this._renderActiveTasks();
-    this._renderResultStrip();
     this.renderHistoryBadge();
     if (!$$('#resultList .task-card, #resultList .gallery-card').length) this._renderTaskList();
   },
@@ -6148,7 +6358,6 @@ const UI = {
     if (!filtered.length) { Toast.info('当前没有可隐藏的结果'); return; }
     filtered.forEach(t => this.state.hiddenTaskIds.add(t.id));
     this._renderTaskList();
-    this._renderResultStrip();
     Toast.success(`已隐藏 ${filtered.length} 个结果，点击「还原」可恢复`);
   },
 
@@ -6157,7 +6366,6 @@ const UI = {
     const n = this.state.hiddenTaskIds.size;
     this.state.hiddenTaskIds = new Set();
     this._renderTaskList();
-    this._renderResultStrip();
     Toast.success(`已还原 ${n} 个结果`);
   },
 
@@ -6254,8 +6462,8 @@ const UI = {
   // 同步所有结果卡右上角对比按钮的 active 状态（卡片在 _toggleCompare 后无需整体重渲染）
   _refreshAllCompareBtns() {
     const ids = new Set(this.state.compareList.map(t => t.id));
-    const checkSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9 12 11 14 16 9" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    const emptySvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>';
+    const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 12 11 14 16 9"/></svg>';
+    const emptySvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>';
     $$('#resultList .task-card').forEach(card => {
       const btn = card.querySelector('.tc-compare-btn');
       if (!btn) return;
@@ -6635,7 +6843,8 @@ const UI = {
       this._closeModal();
       Toast.success('已清理');
       // V26.9.9-A: 删除本地历史后同步到 R2，避免云端 userdata/history 保留旧数据
-      this._scheduleHistorySync();
+      // V36: 改为立即同步，避免 30s 防抖窗口内刷新导致云端旧数据回填
+      this._syncHistoryToCloudNow();
     }));
   },
 
@@ -6790,144 +6999,6 @@ ${items.map(h => {
     a.click();
     URL.revokeObjectURL(a.href);
     Toast.success('已下载 HTML 画廊');
-  },
-
-  /* ---------- BATCH GENERATION ---------- */
-  _openBatchGenerate() {
-    const promptTa = $('[data-key="prompt"], [data-key="text"]');
-    const prompt = promptTa?.value?.trim() || '';
-    if (!prompt) { Toast.warning('请先输入提示词'); promptTa?.focus(); return; }
-    // Collect all models across tabs
-    const allModels = [];
-    ['image', 'video', 'audio'].forEach(tab => { MODELS[tab].forEach(m => allModels.push({ ...m, tab })); });
-    const renderList = (filter = '') => {
-      const f = filter.toLowerCase();
-      const filtered = filter ? allModels.filter(m => m.name.toLowerCase().includes(f) || m.id.toLowerCase().includes(f) || m.desc?.toLowerCase().includes(f)) : allModels;
-      return filtered.map(m => `<label class="batch-model-item" data-mid="${esc(m.id)}" data-tab="${esc(m.tab)}"><input type="checkbox" data-batch-mid="${esc(m.id)}" data-batch-tab="${esc(m.tab)}" style="width:auto;margin:0"><div class="bm-info"><div class="bm-name">${esc(m.name)} <span class="bm-type">${typeName(m.tab)}</span></div><div class="bm-desc">${esc(trunc(m.desc || '', 50))}</div><div class="bm-price">${esc(m.price)}</div></div></label>`).join('');
-    };
-    // V56: Batch queue options — mode radio + priority field
-    const queueAvailable = TaskCenter.isAvailable();
-    const modeHtml = `<div style="margin-bottom:10px;padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border-soft)">
-      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="batchMode" value="immediate" checked style="width:auto;margin:0">立即生成</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;${queueAvailable ? '' : 'opacity:.5'}"><input type="radio" name="batchMode" value="queue" ${queueAvailable ? '' : 'disabled'} style="width:auto;margin:0">排队生成${queueAvailable ? '' : ' <span style="color:var(--text-dim)">(需任务中心)</span>'}</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-left:auto">优先级
-          <input type="number" id="batchPriority" min="1" max="10" value="5" style="width:60px;padding:4px 6px;font-size:12px;text-align:center">
-        </label>
-      </div>
-      <div id="queueStatus" style="font-size:11px;color:var(--text-dim);margin-top:6px"></div>
-    </div>`;
-    const html = `<div style="margin-bottom:10px;padding:10px;background:var(--brand-soft);border-radius:8px;font-size:12px;color:var(--text)"><strong>批量生成</strong>：使用当前提示词「${esc(trunc(prompt, 40))}」同时提交到多个模型。<br><span style="color:var(--text-dim)">勾选下方模型，点击「开始批量生成」。将使用各模型默认参数。</span></div>${modeHtml}<div class="history-search" style="padding:0 0 10px"><input type="text" id="batchSearchInput" placeholder="搜索模型..." style="font-size:13px"></div><div class="batch-model-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">${renderList()}</div>`;
-    this._showModal('批量生成', html, [
-      { label: '全选', fn: () => { $$('#modalBody [data-batch-mid]').forEach(c => c.checked = true); } },
-      { label: '清空', fn: () => { $$('#modalBody [data-batch-mid]').forEach(c => c.checked = false); } },
-      { label: '开始生成', primary: true, fn: () => this._runBatchGenerate(prompt) },
-      { label: '关闭', fn: () => this._closeModal() }
-    ]);
-    const searchInput = $('#batchSearchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', e => {
-        const list = $('#modalBody .batch-model-list');
-        if (list) list.innerHTML = renderList(e.target.value);
-      });
-    }
-    // V56: refresh queue status when queue mode selected
-    const refreshQueueStatus = async () => {
-      const statusEl = $('#queueStatus');
-      if (!statusEl) return;
-      const mode = (document.querySelector('input[name="batchMode"]:checked') || {}).value;
-      if (mode !== 'queue') { statusEl.textContent = ''; return; }
-      const info = await TaskCenter.listQueued();
-      statusEl.innerHTML = `排队 <strong style="color:var(--brand)">${info.queued}</strong> · 运行 <strong>${info.running}</strong> · 今日已耗 <strong>¥${info.spentToday.toFixed(2)}</strong>`;
-    };
-    document.querySelectorAll('input[name="batchMode"]').forEach(r => r.addEventListener('change', refreshQueueStatus));
-    refreshQueueStatus();
-  },
-
-  async _runBatchGenerate(prompt) {
-    const checked = $$('#modalBody [data-batch-mid]:checked');
-    if (!checked.length) { Toast.warning('请至少选择一个模型'); return; }
-    const selected = Array.from(checked).map(c => ({ id: c.dataset.batchMid, tab: c.dataset.batchTab }));
-    // V56: read mode + priority from modal
-    const modeEl = document.querySelector('input[name="batchMode"]:checked');
-    const mode = modeEl?.value || 'immediate';
-    const priorityEl = $('#batchPriority');
-    const priority = Math.max(1, Math.min(10, parseInt(priorityEl?.value || '5', 10)));
-    const useQueue = mode === 'queue' && TaskCenter.isAvailable();
-    this._closeModal();
-    Toast.info(`开始批量生成 ${selected.length} 个任务...`);
-    let success = 0, fail = 0;
-    // Render queue panel if queue mode
-    if (useQueue) this._renderQueuePanel();
-    for (const sel of selected) {
-      const model = MODELS[sel.tab].find(m => m.id === sel.id);
-      if (!model) continue;
-      try {
-        const body = {};
-        // 收集当前模型的参考图URL，用于复用到批量生成
-        const currentRefs = {};
-        if (this.state.model) {
-          for (const p of this.state.model.params) {
-            if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-              const refs = this._getRefs(p.key);
-              const urls = refs.map(r => r.remote || r.src).filter(u => /^https?:\/\//.test(u));
-              if (urls.length > 0) currentRefs[p.type] = urls;
-            }
-          }
-        }
-        for (const p of model.params) {
-          if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-            // 复用同类型的参考图URL
-            const urls = currentRefs[p.type] || [];
-            if (urls.length > 0) {
-              if (p.output === 'single') body[p.key] = urls[0];
-              else if (p.output === 'csv') body[p.key] = urls.join(',');
-              else body[p.key] = urls;
-            } else {
-              body[p.key] = p.output === 'array' ? [] : '';
-            }
-          }
-          else if (p.key === 'prompt' || p.key === 'text') { body[p.key] = prompt; }
-          else { body[p.key] = p.default ?? ''; }
-        }
-        const v = normalizeAndValidateApiBody(model, body);
-        if (!v.ok) { fail++; Toast.error(`${model.name}: ${v.error}`); continue; }
-        if (model.async) {
-          const task = { id: genId(), model, body: v.body, prompt, status: 'processing', createdAt: Date.now(), apiId: null, priority, queued: useQueue };
-          let res;
-          if (useQueue) {
-            // Submit via TaskCenter with priority + queue flag
-            try {
-              res = await TaskCenter.submit({ ...task, priority });
-              task.dispatchedVia = 'taskcenter';
-            } catch (e) {
-              console.warn('[TaskCenter] batch submit failed, falling back to direct:', e);
-              res = await Api.submit(model, v.body);
-              task.dispatchedVia = 'direct';
-            }
-          } else {
-            res = await Api.submit(model, v.body);
-            task.dispatchedVia = 'direct';
-          }
-          task.apiId = res.id;
-          const tasks = Store.getTasks(); tasks.unshift(task); Store.saveTasks(tasks);
-          this._renderTask(task); this._renderActiveTasks();
-          if (task.dispatchedVia === 'direct') poller.start(task);
-          success++;
-          if (useQueue) this._renderQueuePanel();
-        } else {
-          const data = await Api.syncCall(model, v.body);
-          const url = Api.extractUrl(data);
-          const task = { id: genId(), model, body: v.body, prompt, status: 'succeeded', result: { url, data }, createdAt: Date.now(), completedAt: Date.now() };
-          const cost = calcEstimate(model, v.body); task.cost = cost?.amount;
-          Store.addHistory({ id: task.id, model: task.model, prompt, body: v.body, status: 'succeeded', result: task.result, createdAt: task.createdAt, completedAt: task.completedAt, cost: task.cost });
-          this._renderTask(task); this._renderResultStrip();
-          success++; this.playSuccessSound(); this._celebrate(task);
-        }
-      } catch (e) { fail++; Toast.error(`${model.name}: ${e.message}`); }
-    }
-    Toast[fail > 0 ? 'warning' : 'success'](`批量生成完成：成功 ${success}，失败 ${fail}`);
-    if (useQueue) setTimeout(() => this._renderQueuePanel(), 1000);
   },
 
   // V56: render queue status panel at top of result area
@@ -7780,4 +7851,4 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
