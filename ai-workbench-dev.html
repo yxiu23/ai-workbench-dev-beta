@@ -224,7 +224,7 @@ textarea { resize: vertical; min-height: 80px; }
   inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 60px 20px 20px;
+  padding: 56px 20px 20px 420px; /* dev5: 左侧 420px 避开悬浮参数面板 */
 }
 
 /* ============================================================
@@ -516,6 +516,55 @@ textarea { resize: vertical; min-height: 80px; }
 .result-header #sortSelect { flex-shrink: 0; width: auto; min-width: 110px; }
 .result-header .spacer { flex: 1; }
 .result-header .icon-btn { flex-shrink: 0; }
+
+/* dev5: 结果头部液态玻璃胶囊分组 */
+.rh-group {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 6px; border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+.rh-spacer { flex: 1; min-width: 4px; }
+/* 组内元素去掉独立背景（由组胶囊承载） */
+.rh-group .filter-tabs { gap: 2px; }
+.rh-group .filter-tab {
+  padding: 4px 10px; border-radius: 8px;
+  background: transparent; border: none;
+  font-size: 12px; color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition);
+}
+.rh-group .filter-tab:hover { color: var(--text); }
+.rh-group .filter-tab.active { background: var(--brand); color: #fff; font-weight: 500; }
+.rh-group .result-search-wrap { min-width: 80px; max-width: 160px; flex: 0 1 160px; }
+.rh-group .result-search-input {
+  border: none; background: transparent;
+  font-size: 12px; padding: 4px 6px 4px 24px;
+}
+.rh-group .result-search-input:focus { background: var(--glass-bg-hover); border-radius: 6px; outline: none; }
+.rh-group .sort-select {
+  border: none; background: transparent;
+  font-size: 12px; padding: 4px 20px 4px 6px;
+  min-width: auto; color: var(--text-muted);
+}
+.rh-group .icon-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: transparent; border: none; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition); gap: 0;
+}
+.rh-group .icon-btn:hover { background: var(--glass-bg-hover); color: var(--text); }
+.rh-group .icon-btn svg { width: 15px; height: 15px; }
+.rh-group .icon-btn-text { display: none; } /* 胶囊组内只显示图标 */
+.rh-group .header-divider { display: none; } /* 组间不再需要分隔线 */
+/* dev5: brand-mark 紧凑模式（result-header 内仅留品牌字，无下边距/居中） */
+.result-header .brand-mark { padding: 0; margin: 0 4px 0 0; flex-shrink: 0; }
+.result-header .brand-mark .brand-name { font-size: 13px; }
+/* dev5: 天气徽章在 result-header 内缩放，避免 40px 图标撑高顶栏 */
+.result-header .weather-badge .weather-icon { font-size: 16px; }
+.result-header .weather-badge { margin-right: 2px; }
 .filter-tabs { display: flex; gap: 2px; }
 .filter-tab {
   padding: 5px 12px; border-radius: var(--radius-sm); font-size: 12px; color: var(--text-muted);
@@ -1309,9 +1358,9 @@ input[type="range"].im-range {
   }
   .param-panel.collapsed { max-height: 40px; }
   .param-panel.mobile-active { display: flex; }
-  /* dev4: 手机端结果区 padding 收紧（result-header 已返回文档流） */
+  /* dev5: 手机端结果区底部留空给参数面板（底部 55vh），左右收窄 */
   .result-panel {
-    padding: 8px 8px 20px;
+    padding: 8px 8px 55vh;
   }
   /* 移动端视图切换栏 — flex子元素，不遮挡内容 */
   .mobile-view-switch {
@@ -1368,6 +1417,12 @@ input[type="range"].im-range {
   .result-search-wrap { min-width: 80px; flex: 1; }
   .result-search-input { font-size: 11px; padding: 4px 6px 4px 24px; }
   .sort-select { font-size: 11px; min-width: 90px; }
+  /* dev5: 手机端胶囊分组精简 — 隐藏搜索/排序/品牌，仅留筛选+操作+工具 */
+  .result-header { padding: 6px 8px; gap: 4px; flex-wrap: nowrap; overflow-x: auto; }
+  .rh-group { padding: 3px 4px; }
+  .rh-group .result-search-wrap { display: none; } /* 手机端隐藏搜索 */
+  .rh-group .sort-select { display: none; } /* 手机端隐藏排序 */
+  .result-header .brand-mark { display: none; } /* 手机端隐藏标题（已在 tab 区显示） */
   /* 表单元素触控优化 */
   .param-panel input[type="text"],
   .param-panel input[type="number"],
@@ -2163,10 +2218,7 @@ body.is-generating .orb-a {
     </div>
     <!-- dev4: 面板内容容器（提供 padding + 滚动） -->
     <div class="param-panel-body">
-    <!-- V38 品牌字（衬线）— 标题嵌入 api.wuyinkeji.com 链接 -->
-    <div class="brand-mark" aria-hidden="true">
-      <span class="brand-name"><a href="https://api.wuyinkeji.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">修的媒体工作台</a></span>
-    </div>
+    <!-- dev5: 品牌标题已迁移至 .result-header（参数面板收起时仍可见） -->
 
     <!-- Tabs -->
     <div class="tabs" id="tabs">
@@ -2214,54 +2266,65 @@ body.is-generating .orb-a {
 
   <!-- 结果面板 -->
   <main class="result-panel" id="resultPanel">
+    <!-- dev5: 结果头部液态玻璃胶囊分组（brand + 筛选/搜索+排序/操作/工具） -->
     <div class="result-header">
-      <div class="filter-tabs" id="filterTabs">
-        <button class="filter-tab active" data-filter="all">全部</button>
-        <button class="filter-tab" data-filter="image">图片</button>
-        <button class="filter-tab" data-filter="video">视频</button>
-        <button class="filter-tab" data-filter="audio">音频</button>
+      <div class="brand-mark" aria-hidden="true">
+        <span class="brand-name"><a href="https://api.wuyinkeji.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">修的媒体工作台</a></span>
       </div>
-      <div class="result-search-wrap">
-        <svg class="rs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="resultSearchInput" placeholder="搜索提示词..." class="result-search-input">
+      <div class="rh-group">
+        <div class="filter-tabs" id="filterTabs">
+          <button class="filter-tab active" data-filter="all">全部</button>
+          <button class="filter-tab" data-filter="image">图片</button>
+          <button class="filter-tab" data-filter="video">视频</button>
+          <button class="filter-tab" data-filter="audio">音频</button>
+        </div>
       </div>
-      <select id="sortSelect" class="sort-select" title="排序">
-        <option value="newest">最新优先</option>
-        <option value="oldest">最早优先</option>
-        <option value="cost-desc">费用高→低</option>
-        <option value="cost-asc">费用低→高</option>
-        <option value="model">按模型</option>
-      </select>
-      <div class="spacer"></div>
-      <button class="icon-btn" id="restoreBtn" title="还原已隐藏的结果">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        <span class="icon-btn-text">还原</span>
-      </button>
-      <button class="icon-btn" id="clearScreenBtn" title="隐藏当前结果">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        <span class="icon-btn-text">隐藏</span>
-      </button>
-      <button class="icon-btn" id="bulkDeleteBtn" title="按筛选条件批量删除">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        <span class="icon-btn-text">删除</span>
-      </button>
-      <div class="header-divider"></div>
-      <button class="icon-btn" id="historyBtn" title="历史记录">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-        <span class="badge" id="historyBadge"></span>
-      </button>
-      <button class="icon-btn" id="statsBtn" title="统计">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      </button>
-      <button class="icon-btn" id="themeBtn" title="主题">
-        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
-      <button class="icon-btn" id="soundBtn" title="声音">
-        <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-      </button>
-      <button class="icon-btn" id="settingsBtn" title="设置">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
+      <div class="rh-group">
+        <div class="result-search-wrap">
+          <svg class="rs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="resultSearchInput" placeholder="搜索..." class="result-search-input">
+        </div>
+        <select id="sortSelect" class="sort-select" title="排序">
+          <option value="newest">最新优先</option>
+          <option value="oldest">最早优先</option>
+          <option value="cost-desc">费用高→低</option>
+          <option value="cost-asc">费用低→高</option>
+          <option value="model">按模型</option>
+        </select>
+      </div>
+      <div class="rh-group">
+        <button class="icon-btn" id="restoreBtn" title="还原已隐藏的结果">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span class="icon-btn-text">还原</span>
+        </button>
+        <button class="icon-btn" id="clearScreenBtn" title="隐藏当前结果">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          <span class="icon-btn-text">隐藏</span>
+        </button>
+        <button class="icon-btn" id="bulkDeleteBtn" title="按筛选条件批量删除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span class="icon-btn-text">删除</span>
+        </button>
+      </div>
+      <div class="rh-spacer"></div>
+      <div class="rh-group">
+        <button class="icon-btn" id="historyBtn" title="历史记录">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+          <span class="badge" id="historyBadge"></span>
+        </button>
+        <button class="icon-btn" id="statsBtn" title="统计">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </button>
+        <button class="icon-btn" id="themeBtn" title="主题">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" id="soundBtn" title="声音">
+          <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
     </div>
     <div class="result-body" id="resultBody">
       <div id="activeTasksPanel" class="active-tasks-panel empty"></div>
@@ -8148,4 +8211,4 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
