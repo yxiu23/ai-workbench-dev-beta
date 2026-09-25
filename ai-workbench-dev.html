@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.142</title>
+<meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
+<title>修的媒体工作台 V26.9.145</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -701,7 +701,7 @@ to{opacity:1;transform:translateY(0)}}
    r 段）+四角 radial 弧环（与 ::after 圆角补丁同构），全由 --svw* 变量驱动逐帧跟随；
    直边/弧环带对齐（环带中心=窗缘内 0.75px）。max() 防御窗关闭时 calc 负尺寸（负
    background-size 会使声明整条失效）；非 single-view 时 :has 关 opacity；移动端 --svwr:0 */
-.result-panel .sv-holering{position:absolute;inset:0;z-index:5;pointer-events:none;border-radius:inherit;transform:translateZ(0);clip-path:inset(0 round var(--radius-lg,20px));/* IMPL-96④：环层同裁剪——描边线永不越过面板大外框圆角弧 */opacity:0;--svwr:var(--radius-lg,20px);transition:opacity .2s ease;background:linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svwr)) calc(var(--svwy) + .25px)/max(0px,calc(var(--svww) - 2*var(--svwr))) 1px no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svwr)) calc(var(--svwy) + var(--svwh) - 1.25px)/max(0px,calc(var(--svww) - 2*var(--svwr))) 1px no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + .25px) calc(var(--svwy) + var(--svwr))/1px max(0px,calc(var(--svwh) - 2*var(--svwr))) no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svww) - 1.25px) calc(var(--svwy) + var(--svwr))/1px max(0px,calc(var(--svwh) - 2*var(--svwr))) no-repeat,radial-gradient(circle var(--svwr) at 100% 100%,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px)) var(--svwx) var(--svwy)/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 0 100%,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px)) calc(var(--svwx) + var(--svww) - var(--svwr)) var(--svwy)/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 100% 0,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px)) var(--svwx) calc(var(--svwy) + var(--svwh) - var(--svwr))/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 0 0,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px)) calc(var(--svwx) + var(--svww) - var(--svwr)) calc(var(--svwy) + var(--svwh) - var(--svwr))/var(--svwr) var(--svwr) no-repeat}
+.result-panel .sv-holering{position:absolute;inset:0;z-index:5;pointer-events:none;border-radius:inherit;transform:translateZ(0);clip-path:inset(0 round var(--radius-lg,20px));/* IMPL-96④：环层同裁剪——描边线永不越过面板大外框圆角弧 */opacity:0;--svwr:var(--radius-lg,20px);transition:opacity .2s ease;background:linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svwr)) calc(var(--svwy) + .25px)/max(0px,calc(var(--svww) - 2*var(--svwr))) 1px no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svwr)) calc(var(--svwy) + var(--svwh) - 1.25px)/max(0px,calc(var(--svww) - 2*var(--svwr))) 1px no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + .25px) calc(var(--svwy) + var(--svwr))/1px max(0px,calc(var(--svwh) - 2*var(--svwr))) no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svww) - 1.25px) calc(var(--svwy) + var(--svwr))/1px max(0px,calc(var(--svwh) - 2*var(--svwr))) no-repeat,radial-gradient(circle var(--svwr) at 100% 100%,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) var(--svwx) var(--svwy)/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 0 100%,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) calc(var(--svwx) + var(--svww) - var(--svwr)) var(--svwy)/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 100% 0,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) var(--svwx) calc(var(--svwy) + var(--svwh) - var(--svwr))/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 0 0,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) calc(var(--svwx) + var(--svww) - var(--svwr)) calc(var(--svwy) + var(--svwh) - var(--svwr))/var(--svwr) var(--svwr) no-repeat}/* IMPL-112①：四角弧末色标后补 transparent var(--svwr) 收尾——radial-gradient 超末色标延续末色，原 45% 灰延续出圆弧外对角月牙区=内框圆角旁灰色直角（用户①复发真根因：与蒙版层末色标 #000 语义不同，画线层圆外必须显式透明） */
 .result-panel .sv-holering{opacity:0}/* IMPL-111②：默认隐藏；单视图窗开时恢复=内框线（色随下行单行 sed 统一 var(--border)→var(--lg-edge)，与外框 border 同源） */
 .result-panel:has(.result-list.single-view) .sv-holering{opacity:1}/* IMPL-111②：内框线恢复（用户②：面板的内框线带个和外框一样的描边）——描边色=var(--lg-edge) 与外框一致；IMPL-106⑥ 全域隐藏撤销（矩形框真根因已由窗外扩 2px 根治） */
 @media (max-width:768px){.result-panel .sv-holering{--svwr:0px}.result-panel:has(.result-list.single-view) .sv-holering{opacity:0}}/* IMPL-111②：手机纯网格空间无蒙版，窗缘环不参与（特异性 0,4,0 与桌面 :has 同级，源序取胜） */
@@ -1465,6 +1465,7 @@ body[data-mview="result"] .result-header #restoreBtn,body[data-mview="result"] .
 .mobile-view-switch.is-right{left:auto;right:max(10px, var(--safe-right));transform:none}
 body[data-mview="param"] .mobile-view-switch.is-right{display:flex}
 .app-body{padding:var(--safe-top) 0 var(--safe-bottom);gap:0}
+body[data-mview="param"] .app-body{background:var(--bg-elev)}/* IMPL-114①：编辑态全屏白一体——app-body 的 safe-top/bottom padding 区原透明，透出全页网格画布 #svFloorBg（用户：编辑界面底部见深色画布条+顶部透画布雾区；param-panel 白底只盖到 padding 之内），编辑态以 --bg-elev 铺满含 padding 区把画布完全盖住；结果态不命中，保持纯网格空间 */
 .param-panel,.result-panel{border-radius:0;--svwr:0px;border-left:none;border-right:none;border-top:none;box-shadow:none} /* IMPL-87：移动端窗圆角随面板方角关闭 */
 .icon-btn{width:36px;height:36px;border-radius:var(--radius-sm)}
 .icon-btn svg{width:18px;height:18px}
@@ -2536,7 +2537,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.142</span>
+      <span class="about-ver">V26.9.145</span>
     </div>
   </div>
 </aside>
@@ -7265,7 +7266,7 @@ return data;
 } catch (e) {
 clearTimeout(timer);
 if (e.name === "AbortError") throw new Error("timeout: 请求超时");
-if (e.message === "Failed to fetch") { if (String(path || "").includes("/media/")) throw new Error("Worker 媒体代理不通（/media/* 预检被拒或未部署）——请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-99 版已修复预检 CORS）"); throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
+if (e.message === "Failed to fetch") { if (String(path || "").includes("/media/")) { let probe = false, ver = ""; try { const pr = await fetch(url, { method: "OPTIONS", signal: AbortSignal.timeout(8000) }); probe = pr.ok; ver = (pr.headers.get("X-Media-Proxy-Version") || "").trim(); } catch (_) {} if (probe && ver) throw new Error("Worker 媒体代理预检探测通过（部署版本 " + ver + " 在位）但请求仍失败——可能为瞬时网络抖动或 Worker 运行时异常，请重试一次；持续失败请到 Cloudflare Dashboard 查看 Worker 实时日志（IMPL-113③ 自诊断）"); if (probe) throw new Error("Worker 媒体代理可达但响应缺版本特征——线上仍为旧版部署（旧版预检白名单缺 X-Enable-Watermark，水印关闭时必被拒，IMPL-113 真根因）。请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); throw new Error("Worker 媒体代理不通（网络不可达或未部署）——请先核对 设置→R2 Worker 地址 域名是否正确；如域名无误请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版已修正预检真根因）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); } throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
 throw e;
 }
 },
@@ -10174,7 +10175,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.142");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.145");
 }
 if (document.title !== next) document.title = next;
 },
@@ -15798,6 +15799,17 @@ return true;
 });
 },
 _bindMobileViewSwitch() {
+if (!window.__wbSyncThemeColor) window.__wbSyncThemeColor = function () {/* IMPL-114②：theme-color 随视图/网格基底同步——编辑态或画布未启=#ffffff(--bg-elev)，结果态且画布在=网格基底色（SvFloor.config.base hex 校验，用户改主题即时跟随；非法/缺省回退石墨 #1b1e24） */
+try {
+var mc = document.querySelector('meta[name="theme-color"]');
+if (!mc) return;
+var b = window.SvFloor && window.SvFloor.config && typeof window.SvFloor.config.base === "string" ? window.SvFloor.config.base : "";
+var base = /^#[0-9a-fA-F]{6}$/.test(b) ? b : "#1b1e24";
+var host = document.getElementById("svFloorBg");
+var on = !!(host && host.classList.contains("on"));
+mc.setAttribute("content", (document.body.dataset.mview === "result" && on) ? base : "#ffffff");
+} catch (e) {}
+};
 const sw = $("#mobileViewSwitch");
 if (sw) {
 sw.querySelectorAll("button").forEach(btn => {
@@ -15821,6 +15833,7 @@ $("#mobileResultSwitch")?.querySelectorAll("button").forEach(b => b.classList.to
 $("#paramPanel")?.classList.toggle("mobile-active", view === "param");
 $("#resultPanel")?.classList.toggle("mobile-active", view === "result");
 document.body.dataset.mview = view;
+if (window.__wbSyncThemeColor) window.__wbSyncThemeColor();/* IMPL-114②：视图切换即时同步状态栏底色 */
 },
 _bindDrawerSwipe() {
 const drawers = [ {
@@ -20400,7 +20413,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.142 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.145 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
@@ -21611,6 +21624,7 @@ return { open: open, close: close };
     var F = floorObj();
     if (F) { F.ink = ink; F.base = base; scheduleRedraw(); }
     saveSoon();
+    if (window.__wbSyncThemeColor) window.__wbSyncThemeColor();/* IMPL-114②：主题换色即时同步状态栏底色（手机菜单条主题循环钮同链路） */
   });
   /* 分组折叠（沿用用户 demo 的 grp/h 结构语义） */
   /* IMPL-110②：手机菜单条主题循环钮——每次点按切到下一枚网格主题（循环），复用预设 chips 点击链路（ink/base/redraw/save/on 态联动） */
@@ -21653,6 +21667,7 @@ return { open: open, close: close };
       x.classList.toggle("on", x.getAttribute("data-ink") === "122,130,144" && x.getAttribute("data-base") === "#1b1e24");
     });
     scheduleRedraw();
+    if (window.__wbSyncThemeColor) window.__wbSyncThemeColor();/* IMPL-114②：重置回石墨即同步状态栏底色 */
   });
   /* IMPL-85：复制参数——导出当前网格/落影/图片参数 JSON 到剪贴板（含 execCommand 兜底） */
   var copyBtn = document.getElementById("sfx-copy");
