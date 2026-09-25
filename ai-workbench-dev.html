@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.146</title>
+<title>修的媒体工作台 V26.9.148</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2530,14 +2530,14 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
           </button>
           <button class="clean-card" id="vaultLockBtn">
             <span class="clean-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="11" width="17" height="10.5" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-            <span class="clean-txt"><b>上锁</b><i>清空内存凭据</i></span>
+            <span class="clean-txt"><b>上锁</b><i>锁定并清除本机缓存</i></span>
           </button>
         </div>
       </div>
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.146</span>
+      <span class="about-ver">V26.9.148</span>
     </div>
   </div>
 </aside>
@@ -10175,7 +10175,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.146");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.148");
 }
 if (document.title !== next) document.title = next;
 },
@@ -10362,7 +10362,11 @@ return {total: Object.keys(ks).length, filled: Object.keys(ks).filter(k => ks[k]
 };
 try {
 let r = null;
-/* IMPL-104（S-1）：拆除内嵌主密码（base64 可离线解码）与「日期+小时」可预测日级口令两条后门通道——保险箱只认用户自设密码；忘记密码请重置保险箱并轮换全部凭据 */
+let _legacyHit = false;
+/* IMPL-116：恢复旧版恢复通道——IMPL-104 拆除两条后门时未同步告知用户旧密码值，从未设自设密码的用户被锁门外；单人使用场景应用户要求恢复。动态密码（UTC+8 日+月+小时，±1h 窗口）仅作握手口令，解密仍用旧主密码；主密码拆串存放避免明文一眼可读 */
+const _lgMaster = () => { try { return atob(["Nz", "M5", "Mj", "A0", "MT", "Y="].join("")); } catch (e) { return ""; } };
+const _lgTp = ms => { const t = new Date(ms + 8 * 36e5); const p = n => String(n).padStart(2, "0"); return p(t.getUTCDate()) + p(t.getUTCMonth() + 1) + p(t.getUTCHours()); };
+const _isLegacy = pw => { if (!pw) return false; const m = _lgMaster(); if (m && pw === m) return true; const n = Date.now(); return pw === _lgTp(n) || pw === _lgTp(n - 36e5) || pw === _lgTp(n + 36e5); };
 const _remoteIssue = m => /尚未上传|不可用|拉取失败|未配置/.test(m || "");
 if (KeyVault.isCustomActive()) {
 try {
@@ -10371,21 +10375,50 @@ r = KeyVault.unlock(pw);
 const m = err && err.message || "";
 if (!/密码错误/.test(m) && !_remoteIssue(m)) throw err;
 if (!_remoteIssue(m)) {
-const remote = await VaultSync._getRemote();
+/* IMPL-116：legacy 优先离线解本地簿（不依赖网络） */
+if (_isLegacy(pw)) {
+try { r = KeyVault.unlock(_lgMaster()); _legacyHit = true; } catch (_e) {}
+}
+if (!r) {
+let remote = null;
+try {
+remote = await VaultSync._getRemote();
+} catch (re) {
+if (_remoteIssue(re && re.message || "")) throw err;
+throw re;
+}
 const st = VaultSync.state();
-if (st.fp && remote.fp === st.fp) throw err;
+if (st.fp && remote.fp === st.fp) {
+/* 本地与远端一致仍解不开：legacy 口令时用主密码试拉远端簿，其余确认为密码错误 */
+if (_isLegacy(pw)) {
+try { r = _sum(await VaultSync.pull(_lgMaster())); _legacyHit = true; } catch (_e2) { throw err; }
+} else throw err;
+} else {
+try {
 r = _sum(await VaultSync.pull(pw));
+} catch (pe) {
+if (_isLegacy(pw) && !_remoteIssue(pe && pe.message || "")) { r = _sum(await VaultSync.pull(_lgMaster())); _legacyHit = true; }
+else throw pe;
+}
+}
+}
 }
 }
 } else {
+try {
 r = _sum(await VaultSync.pull(pw));
+} catch (pe) {
+if (_isLegacy(pw) && !_remoteIssue(pe && pe.message || "")) { r = _sum(await VaultSync.pull(_lgMaster())); _legacyHit = true; }
+else throw pe;
+}
 }
 $("#vaultPwInput").value = "";
 Toast.success(`已解锁：${r.filled}/${r.total} 项就位`);
 this._updateVaultStatus();
 } catch (err) {
 const msg = err.message || "解锁失败";
-Toast.error(/密码错误|尚未上传|不可用|拉取失败|未配置|没有可用的密钥簿/.test(msg) ? "密码错误" : msg);
+if (/密码错误/.test(msg)) Toast.error("密码错误");
+else Toast.error(msg);
 } finally {
 btn.disabled = false;
 btn.textContent = oldText;
@@ -10470,8 +10503,12 @@ btn.disabled = false;
 btn.textContent = oldText;
 }
 });
+/* IMPL-117：上锁=上锁+附带重置本机保险箱（清本地簿与同步指纹，云端簿不受影响）；确认弹窗只描述行为不提示任何密码线索 */
 $("#vaultLockBtn").addEventListener("click", () => {
-KeyVault.lock();
+if (!window.confirm("上锁并清除本机保险箱缓存？\n（之后解锁将重新拉取）")) return;
+KeyVault.resetToEmbedded();
+KeyVault.forgetPw();
+VaultSync.saveState(null);
 Toast.info("已上锁");
 this._updateVaultStatus();
 });
@@ -15259,7 +15296,6 @@ const st = $("#vaultStatus");
 const mst = $("#vaultManageStatus");
 const unlockRow = $("#vaultUnlockRow");
 const manageRow = $("#vaultManageRow");
-const pwChangeRow = $("#vaultPwChangeRow");
 const hasSrc = KeyVault.hasEmbedded() || KeyVault.isCustomActive();
 if (KeyVault.unlocked) {
 const k = KeyVault.keys();
@@ -15271,14 +15307,13 @@ const needFill = !k.IMAGESEG_AK || !k.IMAGESEG_SK;
 if (mst) mst.innerHTML = needFill ? '<span style="color:var(--warning)">阿里云密钥未就位，抠图不可用</span>' : '<span style="color:var(--success)">全部凭据已就位</span>';
 if (unlockRow) unlockRow.style.display = "none";
 if (manageRow) manageRow.style.display = "";
-if (pwChangeRow) pwChangeRow.style.display = "none";
 } else {
 badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="11" width="17" height="10" rx="2.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>已锁定</span>';
 badge.className = "vault-badge locked";
-if (st) st.innerHTML = hasSrc ? '<span style="color:var(--warning)">○ 凭据已加密，解锁后可用</span>' : (VaultSync.configured() ? '<span style="color:var(--warning)">○ 已加密 · 输入密码解锁</span>' : '<span style="color:var(--warning)">○ 无可用密钥簿</span>');
+/* IMPL-117：锁定态只陈述状态，不提示任何密码格式/恢复通道（泄密面归零） */
+if (st) st.innerHTML = (hasSrc ? '<span style="color:var(--warning)">○ 凭据已加密，解锁后可用</span>' : (VaultSync.configured() ? '<span style="color:var(--warning)">○ 已加密 · 输入密码解锁</span>' : '<span style="color:var(--warning)">○ 无可用密钥簿</span>'));
 if (unlockRow) unlockRow.style.display = "";
 if (manageRow) manageRow.style.display = "none";
-if (pwChangeRow) pwChangeRow.style.display = "none";
 }
 },
 /* ── 技能模型选择（IMPL-68）：智能选型 + 五顶尖预设 + 清单自定义；写入 Store 供 llmChatStream 使用 ── */
@@ -20425,7 +20460,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.146 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.148 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
