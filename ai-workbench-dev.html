@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.145</title>
+<title>修的媒体工作台 V26.9.146</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1466,7 +1466,7 @@ body[data-mview="result"] .result-header #restoreBtn,body[data-mview="result"] .
 body[data-mview="param"] .mobile-view-switch.is-right{display:flex}
 .app-body{padding:var(--safe-top) 0 var(--safe-bottom);gap:0}
 body[data-mview="param"] .app-body{background:var(--bg-elev)}/* IMPL-114①：编辑态全屏白一体——app-body 的 safe-top/bottom padding 区原透明，透出全页网格画布 #svFloorBg（用户：编辑界面底部见深色画布条+顶部透画布雾区；param-panel 白底只盖到 padding 之内），编辑态以 --bg-elev 铺满含 padding 区把画布完全盖住；结果态不命中，保持纯网格空间 */
-.param-panel,.result-panel{border-radius:0;--svwr:0px;border-left:none;border-right:none;border-top:none;box-shadow:none} /* IMPL-87：移动端窗圆角随面板方角关闭 */
+.param-panel,.result-panel{border-radius:0;--svwr:0px;border-left:none;border-right:none;border-top:none;border-bottom:none;box-shadow:none} /* IMPL-87：移动端窗圆角随面板方角关闭；IMPL-115①：+border-bottom:none——param-panel 唯一残留的底边框=手机编辑界面生成按钮下方分割线/外框尾巴（用户），全撤后编辑态纯白一体零线框；result-panel 与 L1443 同链冗余无害 */
 .icon-btn{width:36px;height:36px;border-radius:var(--radius-sm)}
 .icon-btn svg{width:18px;height:18px}
 .result-header .filter-tabs{display:none !important}
@@ -2537,7 +2537,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.145</span>
+      <span class="about-ver">V26.9.146</span>
     </div>
   </div>
 </aside>
@@ -10175,7 +10175,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.145");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.146");
 }
 if (document.title !== next) document.title = next;
 },
@@ -15799,7 +15799,8 @@ return true;
 });
 },
 _bindMobileViewSwitch() {
-if (!window.__wbSyncThemeColor) window.__wbSyncThemeColor = function () {/* IMPL-114②：theme-color 随视图/网格基底同步——编辑态或画布未启=#ffffff(--bg-elev)，结果态且画布在=网格基底色（SvFloor.config.base hex 校验，用户改主题即时跟随；非法/缺省回退石墨 #1b1e24） */
+if (!window.__wbSyncThemeColor) {
+window.__wbSyncThemeColor = function () {/* IMPL-114②+IMPL-115③：浏览器沉浸双色同步——①theme-color：编辑态或画布未启=#ffffff，结果态且画布在=网格基底色（SvFloor.config.base hex 校验，非法/缺省回退石墨 #1b1e24）；②body/html 背景内联同步（仅≤768px）：iOS Safari 的滚动边缘融合渐变/工具栏染色/橡皮筋取样页面背景色——body 恒白(--bg-elev)时深色网格上方被系统画「白→透明」羽化（用户"白黑羽化渐变"），结果态把 body 背景同步为基底色=系统融合同色=沉浸（浅色网格同样受益：羽化=米纸色）；inline !important 压过移动端样式表 body{background:var(--bg-elev)!important}，非沉浸态 removeProperty 回落白底 */
 try {
 var mc = document.querySelector('meta[name="theme-color"]');
 if (!mc) return;
@@ -15807,9 +15808,20 @@ var b = window.SvFloor && window.SvFloor.config && typeof window.SvFloor.config.
 var base = /^#[0-9a-fA-F]{6}$/.test(b) ? b : "#1b1e24";
 var host = document.getElementById("svFloorBg");
 var on = !!(host && host.classList.contains("on"));
-mc.setAttribute("content", (document.body.dataset.mview === "result" && on) ? base : "#ffffff");
+var immersive = document.body.dataset.mview === "result" && on;
+mc.setAttribute("content", immersive ? base : "#ffffff");
+var mob = window.matchMedia && window.matchMedia("(max-width:768px)").matches;
+if (immersive && mob) {
+document.body.style.setProperty("background-color", base, "important");
+document.documentElement.style.setProperty("background-color", base, "important");
+} else {
+document.body.style.removeProperty("background-color");
+document.documentElement.style.removeProperty("background-color");
+}
 } catch (e) {}
 };
+window.addEventListener("resize", function () { if (window.__wbSyncThemeColor) window.__wbSyncThemeColor(); }, { passive: true });/* IMPL-115③：跨断点旋转/缩放即时回落，防深色内联残留到桌面态 */
+}
 const sw = $("#mobileViewSwitch");
 if (sw) {
 sw.querySelectorAll("button").forEach(btn => {
@@ -20413,7 +20425,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.145 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.146 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
@@ -21610,6 +21622,7 @@ return { open: open, close: close };
       if (F) {
         F[c[2]] = c[3] === "int" ? parseInt(b.getAttribute(c[1]), 10) : b.getAttribute(c[1]);
         scheduleRedraw();
+        if (window.__wbSyncThemeColor) window.__wbSyncThemeColor();/* IMPL-115④：线色/底色单芯片直改也即时同步沉浸底色（theme-color+body 背景） */
       }
       saveSoon();
     });
